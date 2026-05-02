@@ -696,9 +696,7 @@ export default function App() {
   const [end, setEnd] = useState(null);
   const [standard, setStandard] = useState(null);
   const [safewalk, setSafewalk] = useState(null);
-  const [showOnboarding, setShowOnboarding] = useState(() => {
-    return !localStorage.getItem("safewalk_onboarded");
-  });
+  const [showOnboarding, setShowOnboarding] = useState(true);
   const [sameRoute, setSameRoute] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
