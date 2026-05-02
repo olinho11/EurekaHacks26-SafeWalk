@@ -17,6 +17,7 @@ const STEPS = [
     title: "Navigation that favors\npresence over speed.",
     body: "60% of people feel anxious walking home after 9 PM. SafeWalk routes by lit streets, foot traffic, and open businesses — not just shortest time.",
     visual: "logo",
+    image: logo,
   },
   {
     eyebrow: "How it works",
@@ -47,6 +48,18 @@ const STEPS = [
 
 export default function Onboarding({ onComplete }) {
   const [step, setStep] = useState(0);
+  const [showIntro, setShowIntro] = useState(true);
+  const [introStage, setIntroStage] = useState(0); // 0: Google Maps, 1: Crossed, 2: SafeWalk
+
+  useEffect(() => {
+    // Intro sequence
+    const timers = [
+      setTimeout(() => setIntroStage(1), 1000), // Cross it out
+      setTimeout(() => setIntroStage(2), 2000), // Show SafeWalk
+      setTimeout(() => setShowIntro(false), 3800), // Show card
+    ];
+    return () => timers.forEach(clearTimeout);
+  }, []);
 
   useEffect(() => {
     const onKey = (e) => {
@@ -68,6 +81,23 @@ export default function Onboarding({ onComplete }) {
   const current = STEPS[step];
   const isLast = step === STEPS.length - 1;
   const progress = ((step + 1) / STEPS.length) * 100;
+
+  if (showIntro) {
+    return (
+      <div className="onboarding-overlay">
+        <div className={`onboarding-intro stage-${introStage}`}>
+          <div className="intro-google-wrap">
+            <span className="google-maps-text">Google Maps</span>
+            <div className="intro-strike" />
+          </div>
+          <div className="intro-safewalk-wrap">
+            <img src={logo} alt="" className="intro-logo" />
+            <span className="safewalk-text">SafeWalk</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="onb-overlay">

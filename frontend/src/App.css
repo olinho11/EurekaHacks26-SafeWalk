@@ -1774,6 +1774,97 @@ button:active:not(:disabled) {
   transform: translateY(1px);
 }
 
+/* ── Onboarding Intro Animation ── */
+.onboarding-intro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-12);
+  width: 100%;
+  max-width: 600px;
+  text-align: center;
+  perspective: 1000px;
+}
+
+.intro-google-wrap {
+  position: relative;
+  font-size: 3.5rem;
+  font-weight: 800;
+  color: var(--muted);
+  opacity: 1;
+  transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  letter-spacing: -0.02em;
+}
+
+.google-maps-text {
+  display: inline-block;
+  transition: transform 0.4s ease;
+}
+
+.intro-strike {
+  position: absolute;
+  top: 55%;
+  left: -5%;
+  width: 110%;
+  height: 10px;
+  background: var(--danger);
+  transform: translateY(-50%) scaleX(0);
+  transform-origin: left;
+  border-radius: var(--r-pill);
+  box-shadow: 0 0 20px var(--danger-dim), 0 0 40px rgba(255, 92, 108, 0.2);
+  z-index: 10;
+}
+
+.stage-1 .intro-strike {
+  transform: translateY(-50%) scaleX(1);
+  transition: transform 0.4s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.stage-1 .google-maps-text {
+  transform: scale(0.95);
+}
+
+.stage-2 .intro-google-wrap {
+  opacity: 0.15;
+  transform: scale(0.85) translateY(-20px);
+  filter: blur(2px);
+}
+
+.intro-safewalk-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-4);
+  opacity: 0;
+  transform: translateY(40px) scale(0.9);
+  transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.stage-2 .intro-safewalk-wrap {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.intro-logo {
+  width: 160px;
+  height: 160px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 30px var(--accent-glow));
+}
+
+.safewalk-text {
+  font-size: 5rem;
+  font-weight: 900;
+  color: var(--accent);
+  letter-spacing: -0.04em;
+  line-height: 1;
+  background: linear-gradient(180deg, #fff 0%, var(--accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 20px var(--accent-glow));
+}
+
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
