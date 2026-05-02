@@ -3,6 +3,7 @@ SafeWalk routing: OSRM for geometry, Overpass for OSM context, heuristic safety 
 """
 from __future__ import annotations
 
+import concurrent.futures
 import datetime
 import math
 from typing import Any
@@ -453,15 +454,18 @@ def compute_routes(
         }
 
     south, west, north, east = bbox_pad(start_lat, start_lon, end_lat, end_lon, pad=0.015)
-    ctx = overpass_context(south, west, north, east)
-    ctx["reports"] = load_reports()
 
     start = (start_lon, start_lat)
     end = (end_lon, end_lat)
 
-    # 1) Fastest-oriented: single shortest path (steps for turn-by-turn / walk mode)
-    base_routes = fetch_osrm_route([start, end], alternatives=False, include_steps=True)
-    alt_routes = fetch_osrm_route([start, end], alternatives=True, include_steps=True)
+    # Run Overpass and the direct OSRM call concurrently — these are the two slowest steps
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as ex:
+        ctx_future = ex.submit(overpass_context, south, west, north, east)
+        direct_future = ex.submit(fetch_osrm_route, [start, end], True, True)
+        ctx = ctx_future.result()
+        direct_routes = direct_future.result()
+
+    ctx["reports"] = load_reports()
 
     candidates: list[tuple[dict[str, Any], list[list[float]]]] = []
     seen: set[str] = set()
@@ -476,25 +480,27 @@ def compute_routes(
         seen.add(key)
         candidates.append((rt, geom))
 
-    for rt in base_routes:
-        add_candidate(rt)
-    for rt in alt_routes:
+    for rt in direct_routes:
         add_candidate(rt)
 
-    # 2) Biased "safe" routes via perpendicular OSM anchors (left/right of corridor)
+    # Build via-point waypoint lists (perpendicular detours + chained pair)
     vias = find_candidate_via_points(start_lat, start_lon, end_lat, end_lon, ctx)
-    for via in vias[:4]:
-        vl = (via[1], via[0])
-        seg = fetch_osrm_route([start, vl, end], alternatives=False, include_steps=True)
-        for rt in seg:
-            add_candidate(rt)
-    # Also try chaining two via-points for a longer detour
+    via_coord_lists: list[list] = [
+        [start, (via[1], via[0]), end] for via in vias[:4]
+    ]
     if len(vias) >= 2:
-        vl1 = (vias[0][1], vias[0][0])
-        vl2 = (vias[1][1], vias[1][0])
-        seg = fetch_osrm_route([start, vl1, vl2, end], alternatives=False, include_steps=True)
-        for rt in seg:
-            add_candidate(rt)
+        via_coord_lists.append([start, (vias[0][1], vias[0][0]), (vias[1][1], vias[1][0]), end])
+
+    # Fetch all via-point routes in parallel
+    if via_coord_lists:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=len(via_coord_lists)) as ex:
+            futures = [ex.submit(fetch_osrm_route, coords, False, True) for coords in via_coord_lists]
+            for f in concurrent.futures.as_completed(futures):
+                try:
+                    for rt in f.result():
+                        add_candidate(rt)
+                except Exception:
+                    pass
 
     if not candidates:
         return {
