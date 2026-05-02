@@ -5,6 +5,7 @@ SafeWalk API: routes, geocode, AI narration, crowdsourced reports.
 from __future__ import annotations
 
 import os
+import time
 
 from flask import Flask, jsonify, request
 from flask_cors import CORS
@@ -14,6 +15,10 @@ from reports_store import append_report, load_reports
 
 app = Flask(__name__)
 CORS(app)
+
+# Cache route results for 5 minutes so repeated clicks return consistent scores.
+_routes_cache: dict = {}
+_CACHE_TTL = 300
 
 
 @app.get("/api/health")
@@ -31,7 +36,15 @@ def routes():
         e_lon = float(body["end"]["lon"])
     except (KeyError, TypeError, ValueError):
         return jsonify({"error": "start and end must include lat/lon numbers"}), 400
+
+    cache_key = f"{round(s_lat, 5)},{round(s_lon, 5)},{round(e_lat, 5)},{round(e_lon, 5)}"
+    entry = _routes_cache.get(cache_key)
+    if entry and time.time() - entry["ts"] < _CACHE_TTL:
+        return jsonify(entry["result"])
+
     result = compute_routes(s_lat, s_lon, e_lat, e_lon)
+    if not result.get("error"):
+        _routes_cache[cache_key] = {"result": result, "ts": time.time()}
     if result.get("error"):
         return jsonify(result), 404
     return jsonify(result)
@@ -87,29 +100,52 @@ def narrate():
         lines = []
 
         routes_are_equal = score_gap is not None and score_gap == 0
+        both_poor = safe_s is not None and std_s is not None and safe_s < 35 and std_s < 35
+        gap_negligible = score_gap is not None and abs(score_gap) < 5
 
-        # Opening — score comparison
+        # Advisory mode: poor coverage area or routes are effectively identical
+        if both_poor or gap_negligible:
+            if both_poor:
+                lines.append(
+                    f"This area has limited street lighting and few active businesses along either route "
+                    f"(SafeWalk scores {round(safe_s)}/100, fastest scores {round(std_s)}/100) — "
+                    f"natural surveillance is low regardless of which path you take."
+                )
+            else:
+                lines.append(
+                    f"Both routes are similar in safety ({round(safe_s)}/100 vs {round(std_s)}/100) — "
+                    f"the difference is too small to matter."
+                )
+            lines.append(
+                "If you're walking at night: stick to the main road, let someone know your route, "
+                "and consider travelling with a companion."
+            )
+            if extra_min is not None and extra_min > 0:
+                lines.append(
+                    f"The faster option saves {extra_min} {'minute' if extra_min == 1 else 'minutes'} "
+                    f"and is the practical choice here — less time outside means less exposure."
+                )
+            elif safe_dm is not None:
+                lines.append(f"Total walk time is about {fmt_min(safe_dm)} minutes.")
+            return " ".join(lines)
+
+        # Normal comparison mode
         if score_gap is not None and score_gap > 0:
             lines.append(
                 f"SafeWalk chose the {round(safe_s)}/100 route over the faster {round(std_s)}/100 option — "
                 f"a {score_gap}-point safety advantage."
             )
-        elif routes_are_equal:
-            lines.append(
-                f"Both routes score {round(safe_s)}/100 in this area — lighting and business density "
-                f"are similar along both paths."
-            )
         else:
             lines.append(f"The routes score similarly ({round(safe_s) if safe_s else '?'} vs {round(std_s) if std_s else '?'}/100).")
 
-        # Lighting detail — skip if routes are equal and lit % is tiny (misleading)
-        if safe_lit is not None and not (routes_are_equal and round(safe_lit) < 5):
+        # Lighting detail
+        if safe_lit is not None:
             if lit_gap is not None and lit_gap >= 5:
                 lines.append(
                     f"The SafeWalk route has {round(safe_lit)}% lit road coverage — "
                     f"{lit_gap} percentage points more than the fastest path."
                 )
-            elif not routes_are_equal:
+            else:
                 lines.append(f"{round(safe_lit)}% of the SafeWalk route runs along lit roads.")
 
         # Business detail
@@ -119,19 +155,17 @@ def narrate():
                     f"It passes {safe_biz} active {'business' if safe_biz == 1 else 'businesses'} — "
                     f"{biz_gap} more than the direct route — keeping natural surveillance high."
                 )
-            elif safe_biz > 0 and not routes_are_equal:
+            elif safe_biz > 0:
                 lines.append(f"{safe_biz} active {'business' if safe_biz == 1 else 'businesses'} line the route, providing natural surveillance.")
 
         # Isolation note
         if safe_iso is not None and safe_iso > 20:
             lines.append(f"About {round(safe_iso)}% of the route has limited lighting and amenities — stay alert in those stretches.")
 
-        # Time cost — only mention trade-off if there's actually a safety gain
+        # Time cost
         if extra_min is not None and extra_min > 0:
             if score_gap is not None and score_gap > 0:
                 lines.append(f"It adds {extra_min} {'minute' if extra_min == 1 else 'minutes'} — a worthwhile trade-off for {score_gap} points of extra safety.")
-            elif routes_are_equal:
-                lines.append(f"The SafeWalk route takes {extra_min} {'minute' if extra_min == 1 else 'minutes'} longer with no safety advantage here — both routes are equivalent.")
             else:
                 lines.append(f"Walk time is about {fmt_min(safe_dm)} minutes.")
         elif safe_dm is not None:
