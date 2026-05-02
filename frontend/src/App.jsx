@@ -579,8 +579,8 @@ export default function App() {
   ]);
 
   const runDemo = async () => {
-    const demoStart = { lat: 43.6437, lon: -79.3799, label: "King & Simcoe, Toronto" };
-    const demoEnd = { lat: 43.6750, lon: -79.3950, label: "Bloor & Avenue, Toronto" };
+    const demoStart = { lat: 43.6479, lon: -79.4503, label: "Roncesvalles & Howard Park, Toronto" };
+    const demoEnd = { lat: 43.6592, lon: -79.4660, label: "Bloor & Keele, Toronto" };
     setStart(demoStart);
     setEnd(demoEnd);
     setStartResolved(demoStart);
