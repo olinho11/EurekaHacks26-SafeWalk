@@ -41,6 +41,13 @@ import {
   Zap,
   Footprints,
   Send,
+  Settings as SettingsIcon,
+  Palette,
+  Info,
+  ShieldCheck,
+  FileText,
+  Heart,
+  X,
 } from "lucide-react";
 import logo from "./assets/logo.png";
 import Onboarding from "./Onboarding";
@@ -99,20 +106,14 @@ function SettingsModal({ open, onClose, theme, onThemeChange }) {
               return (
                 <button
                   key={tab.id}
-                  type="button"
-                  className={`settings-nav-item${activeTab === tab.id ? " active" : ""}`}
+                  className={`settings-nav-btn${activeTab === tab.id ? " active" : ""}`}
                   onClick={() => setActiveTab(tab.id)}
                 >
-                  <span className="settings-nav-icon">
-                    <Icon size={14} strokeWidth={2.5} />
-                  </span>
-                  <span>{tab.label}</span>
+                  <Icon size={16} strokeWidth={2.25} />
+                  {tab.label}
                 </button>
               );
             })}
-            <div className="settings-nav-footer">
-              <span className="app-version">SafeWalk v{APP_VERSION}</span>
-            </div>
           </nav>
 
           <div className="settings-panel" key={activeTab}>
@@ -271,9 +272,6 @@ const MAP_COLORS = {
   pendingMark: "#3ee6b0",
 };
 
-// --- FUNCTIONAL FIX: Create a renderer that updates during movement ---
-const fastRenderer = L.canvas({ padding: 0.5, updateWhenIdle: false });
-
 /** Avoids "Unexpected end of JSON input" when the proxy/API returns an empty body (backend off). */
 async function readJsonResponse(response) {
   const text = await response.text();
@@ -314,18 +312,6 @@ function openRouteInGoogleMaps(route) {
   const url = buildGoogleMapsWalkingUrl(route?.geometry);
   if (!url) return;
   window.open(url, "_blank", "noopener,noreferrer");
-}
-
-function haversineM(lat1, lon1, lat2, lon2) {
-  const R = 6371000;
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLon = ((lon2 - lon1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) ** 2;
-  return 2 * R * Math.asin(Math.sqrt(a));
 }
 
 function FitBounds({ lines, enabled = true }) {
@@ -414,56 +400,13 @@ function ScoreRing({ score, tier, description }) {
   );
 }
 
-function comparativeDescription(thisSafety, otherSafety, isSafewalk) {
-  if (!thisSafety || !otherSafety) return null;
-  const scoreDiff = Math.round((thisSafety.score ?? 0) - (otherSafety.score ?? 0));
-  const litDiff = Math.round((thisSafety.lit_coverage_pct ?? 0) - (otherSafety.lit_coverage_pct ?? 0));
-  const bizDiff = (thisSafety.active_business_proximity_hits ?? 0) - (otherSafety.active_business_proximity_hits ?? 0);
-
-  const lines = [];
-
-  if (isSafewalk) {
-    if (scoreDiff > 0) {
-      lines.push(`${scoreDiff} points safer than the fastest route.`);
-    } else if (scoreDiff < 0) {
-      lines.push(`Scores ${Math.abs(scoreDiff)} pts lower than the fastest route — but takes a genuinely different path.`);
-    } else {
-      lines.push("Scores the same as the fastest route — a different path through a similar environment.");
-    }
-  } else {
-    if (scoreDiff < 0) {
-      lines.push(`${Math.abs(scoreDiff)} points less safe than the SafeWalk route.`);
-    } else if (scoreDiff > 0) {
-      lines.push(`${scoreDiff} points safer than the SafeWalk route — the fastest path here is already well-covered.`);
-    } else {
-      lines.push("Scores the same as the SafeWalk route — both paths are similarly safe here.");
-    }
-  }
-
-  if (Math.abs(litDiff) >= 5) {
-    if (litDiff > 0) {
-      lines.push(`${litDiff}% more of this route is on lit streets.`);
-    } else {
-      lines.push(`${Math.abs(litDiff)}% less of this route is on lit streets.`);
-    }
-  }
-
-  if (Math.abs(bizDiff) >= 3) {
-    if (bizDiff > 0) {
-      lines.push(`Passes ${bizDiff} more active businesses.`);
-    } else {
-      lines.push(`Passes ${Math.abs(bizDiff)} fewer active businesses nearby.`);
-    }
-  }
-
-  const iso = thisSafety.isolation_pct ?? 0;
-  if (iso > 30) {
-    lines.push(`${Math.round(iso)}% of this route has no lit road or business within 150 m — exposed stretches.`);
-  } else if (iso === 0) {
-    lines.push("No isolated stretches — always near a business or lit street.");
-  }
-
-  return lines.join(" ");
+function scoreDescription(score, isSafewalk = false) {
+  if (score == null) return null;
+  if (score >= 75) return "Excellent — well-lit streets with lots of open businesses and foot traffic the whole way. Safe to walk at any hour.";
+  if (score >= 55) return "Good — solid lighting and plenty of businesses nearby. Most people would feel comfortable on this route.";
+  if (score >= 35) return "Moderate — some stretches are quieter or darker. Fine during the day; take extra care at night.";
+  if (isSafewalk) return "Low — limited amenities and lighting near this route. This is still the safest available option for this trip.";
+  return "Low — limited lighting and few open businesses along this path. Consider taking the SafeWalk route instead.";
 }
 
 /** `durationMin` is decimal minutes from the API. */
@@ -842,8 +785,8 @@ export default function App() {
   ]);
 
   const runDemo = async () => {
-    const demoStart = { lat: 43.6437, lon: -79.3799, label: "King & Simcoe, Toronto" };
-    const demoEnd = { lat: 43.6750, lon: -79.3950, label: "Bloor & Avenue, Toronto" };
+    const demoStart = { lat: 43.6479, lon: -79.4503, label: "Roncesvalles & Howard Park, Toronto" };
+    const demoEnd = { lat: 43.6592, lon: -79.4660, label: "Bloor & Keele, Toronto" };
     setStart(demoStart);
     setEnd(demoEnd);
     setStartResolved(demoStart);
@@ -1007,53 +950,78 @@ export default function App() {
     loadReports();
   };
 
+
+  const [showSettings, setShowSettings] = useState(false);
+  const [theme, setTheme] = useState(() => localStorage.getItem("safewalk_theme") || "teal");
+
+  // Apply theme to document
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("safewalk_theme", theme);
+  }, [theme]);
+
+  const toggleSettings = () => setShowSettings((v) => !v);
+
   const onMapPick = (latlng) => {
     setPendingReport(latlng);
   };
 
-  return (
-    <div className="app-shell">
-      <aside className="side-panel">
-        <div className="brand">
-          <div className="brand-header">
-            <img
-              src="/logo.png"
-              alt="SafeWalk"
-              className="brand-logo-img"
-              width="56"
-              height="56"
-            />
-            <h1 className="brand-wordmark">SafeWalk</h1>
-          </div>
-          <p className="brand-tagline">
-            Navigation that favors natural surveillance — lit streets, foot
-            traffic, and open businesses — so you can reclaim the night.
-          </p>
-          <div className="stat-line">
-            <strong>60%</strong> of people feel more anxious walking home after
-            9 PM. SafeWalk routes for presence, not just minutes.
-          </div>
-        </div>
+  const completeOnboarding = () => {
+    setShowOnboarding(false);
+    localStorage.setItem("safewalk_onboarded", "true");
+  };
 
-          <LocationAutocomplete
-            id="sw-start"
-            label="Start"
-            value={startQ}
-            onValueChange={setStartQ}
-            resolved={startResolved}
-            onResolved={setStartResolved}
-            hint="Type 3+ characters, then tap a suggestion to pin your start."
-            apiBase={apiBase}
-          />
-          <LocationAutocomplete
-            id="sw-end"
-            label="Destination"
-            value={endQ}
-            onValueChange={setEndQ}
-            resolved={endResolved}
-            onResolved={setEndResolved}
-            apiBase={apiBase}
-          />
+  return (
+    <>
+      {showOnboarding && <Onboarding onComplete={completeOnboarding} />}
+      <SettingsModal
+        open={showSettings}
+        onClose={() => setShowSettings(false)}
+        theme={theme}
+        onThemeChange={setTheme}
+      />
+      <div className="app-shell">
+      <aside className="side-panel">
+          <div className="brand">
+            <div className="brand-header">
+              <img
+                src={logo}
+                alt="SafeWalk"
+                className="brand-logo-img"
+                width="56"
+                height="56"
+              />
+              <h1 className="brand-wordmark">SafeWalk</h1>
+              <button
+                className="btn-settings-trigger"
+                onClick={toggleSettings}
+                aria-label="Settings"
+                title="Settings"
+              >
+                <SettingsIcon size={20} strokeWidth={2.25} />
+              </button>
+            </div>
+          </div>
+
+        <LocationAutocomplete
+          id="sw-start"
+          label="Start"
+          value={startQ}
+          onValueChange={setStartQ}
+          resolved={startResolved}
+          onResolved={setStartResolved}
+          hint="Type 3+ characters, wait for suggestions, then tap a row to pin. Requires the backend on port 5050."
+          apiBase={apiBase}
+        />
+        <LocationAutocomplete
+          id="sw-end"
+          label="Destination"
+          value={endQ}
+          onValueChange={setEndQ}
+          resolved={endResolved}
+          onResolved={setEndResolved}
+          apiBase={apiBase}
+        />
 
         <div className="actions">
           <button
@@ -1161,216 +1129,216 @@ export default function App() {
               </div>
             </>
           ) : standard || safewalk ? (
-              <>
-                <div className={`route-card fast${walkMode === "standard" ? " route-card-walking" : ""}`}>
-                  <div className="route-card-top">
-                    <div>
-                      <div className="route-card-title-row">
-                        <h3>Fastest Route</h3>
-                        {standard?.safety?.tier ? (
-                          <span className={tierPill(standard.safety.tier)}>
-                            {standard.safety.tier}
-                          </span>
-                        ) : null}
-                      </div>
-                      <p className="route-card-subtitle">Optimized for speed</p>
+            <>
+              <div className={`route-card fast${walkMode === "standard" ? " route-card-walking" : ""}`}>
+                <div className="route-card-top">
+                  <div>
+                    <div className="route-card-title-row">
+                      <h3>Fastest Route</h3>
+                      {standard?.safety?.tier ? (
+                        <span className={tierPill(standard.safety.tier)}>
+                          {standard.safety.tier}
+                        </span>
+                      ) : null}
                     </div>
-                    <ScoreRing
-                      score={standard?.safety?.score}
-                      tier={standard?.safety?.tier}
-                      description={comparativeDescription(standard?.safety, safewalk?.safety, false)}
-                    />
+                    <p className="route-card-subtitle">Optimized for speed</p>
                   </div>
-                  <div className="route-stats-grid">
-                    <div className="route-stat">
-                      <span className="route-stat-value">
-                        <DurationLine durationMin={standard?.duration_min} />
-                      </span>
-                      <span className="route-stat-label"><Clock size={10} strokeWidth={2.5} />Time</span>
-                    </div>
-                    <div className="route-stat">
-                      <span className="route-stat-value">{standard ? `${standard.distance_km} km` : "—"}</span>
-                      <span className="route-stat-label"><Ruler size={10} strokeWidth={2.5} />Distance</span>
-                    </div>
-                    <div className="route-stat">
-                      <span className="route-stat-value">{standard?.safety?.active_business_proximity_hits ?? "—"}</span>
-                      <span className="route-stat-label"><Building2 size={10} strokeWidth={2.5} />Businesses</span>
-                    </div>
+                  <ScoreRing
+                    score={standard?.safety?.score}
+                    tier={standard?.safety?.tier}
+                    description={scoreDescription(standard?.safety?.score)}
+                  />
+                </div>
+                <div className="route-stats-grid">
+                  <div className="route-stat">
+                    <span className="route-stat-value">
+                      <DurationLine durationMin={standard?.duration_min} />
+                    </span>
+                    <span className="route-stat-label">Time</span>
                   </div>
-                  <div className="route-card-actions">
-                    <button
-                      className="btn-walk"
-                      type="button"
-                      disabled={!standard?.steps?.length}
-                      onClick={() => { setWalkMode("standard"); setFollowUser(true); setReportMode(false); }}
-                    >
-                      <Footprints size={14} strokeWidth={2.25} />
-                      Walk here
-                    </button>
-                    <button
-                      className="btn-google-maps"
-                      type="button"
-                      disabled={!standard?.geometry?.length}
-                      onClick={() => openRouteInGoogleMaps(standard)}
-                    >
-                      <ExternalLink size={14} strokeWidth={2.25} />
-                      Google Maps
-                    </button>
+                  <div className="route-stat">
+                    <span className="route-stat-value">{standard ? `${standard.distance_km} km` : "—"}</span>
+                    <span className="route-stat-label">Distance</span>
+                  </div>
+                  <div className="route-stat">
+                    <span className="route-stat-value">{standard?.safety?.active_business_proximity_hits ?? "—"}</span>
+                    <span className="route-stat-label">Businesses</span>
                   </div>
                 </div>
-
-                <div className={`route-card safe${walkMode === "safewalk" ? " route-card-walking" : ""}`}>
-                  <div className="route-card-top">
-                    <div>
-                      <div className="route-card-title-row">
-                        <h3>SafeWalk Route</h3>
-                        {safewalk?.safety?.tier ? (
-                          <span className={tierPill(safewalk.safety.tier)}>
-                            {safewalk.safety.tier}
-                          </span>
-                        ) : null}
-                      </div>
-                      <p className="route-card-subtitle">Optimized for safety</p>
-                    </div>
-                    <ScoreRing
-                      score={safewalk?.safety?.score}
-                      tier={safewalk?.safety?.tier}
-                      description={comparativeDescription(safewalk?.safety, standard?.safety, true)}
-                    />
-                  </div>
-                  <div className="route-stats-grid">
-                    <div className="route-stat">
-                      <span className="route-stat-value">
-                        <DurationLine durationMin={safewalk?.duration_min} />
-                      </span>
-                      <span className="route-stat-label"><Clock size={10} strokeWidth={2.5} />Time</span>
-                    </div>
-                    <div className="route-stat">
-                      <span className="route-stat-value">{safewalk ? `${safewalk.distance_km} km` : "—"}</span>
-                      <span className="route-stat-label"><Ruler size={10} strokeWidth={2.5} />Distance</span>
-                    </div>
-                    <div className="route-stat">
-                      <span className="route-stat-value">{safewalk?.safety?.active_business_proximity_hits ?? "—"}</span>
-                      <span className="route-stat-label"><Building2 size={10} strokeWidth={2.5} />Businesses</span>
-                    </div>
-                  </div>
-                  <div className="route-card-actions">
-                    <button
-                      className="btn-walk"
-                      type="button"
-                      disabled={!safewalk?.steps?.length}
-                      onClick={() => { setWalkMode("safewalk"); setFollowUser(true); setReportMode(false); }}
-                    >
-                      <Footprints size={14} strokeWidth={2.25} />
-                      Walk here
-                    </button>
-                    <button
-                      className="btn-google-maps"
-                      type="button"
-                      disabled={!safewalk?.geometry?.length}
-                      onClick={() => openRouteInGoogleMaps(safewalk)}
-                    >
-                      <ExternalLink size={14} strokeWidth={2.25} />
-                      Google Maps
-                    </button>
-                  </div>
-                </div>
-              </>
-            ) : null}
-          </div>
-
-          {narration ? (
-            <div className="narration">
-              <header className="narration-header">
-                <Sparkles size={14} strokeWidth={2.5} />
-                AI Safety Summary
-              </header>
-              {narration}
-            </div>
-          ) : null}
-
-          <div className="report-section">
-            <div className="actions-row">
-              <button
-                className={reportMode ? "btn-primary" : "btn-ghost"}
-                type="button"
-                onClick={() => {
-                  setReportMode((v) => !v);
-                  setPendingReport(null);
-                }}
-              >
-                {reportMode ? (
-                  <>
-                    <XCircle size={14} strokeWidth={2.25} />
-                    Cancel pin drop
-                  </>
-                ) : (
-                  <>
-                    <MapPin size={14} strokeWidth={2.25} />
-                    Report on map
-                  </>
-                )}
-              </button>
-            </div>
-            {reportMode ? (
-              <p className="geo-hint">
-                Tap the map where the issue is. Reports affect safety scores for everyone.
-              </p>
-            ) : null}
-            {walkMode ? (
-              <>
-                {geoError ? (
-                  <p className="error walk-hud-msg">
-                    <AlertTriangle size={14} strokeWidth={2.25} style={{ flexShrink: 0 }} />
-                    <span>{geoError}</span>
-                  </p>
-                ) : null}
-                {!userPos && !geoError ? (
-                  <p className="geo-hint walk-hud-msg">Acquiring GPS…</p>
-                ) : null}
-                {userPos && start && (() => {
-                  const distToStart = haversineM(userPos.lat, userPos.lng, start.lat, start.lon);
-                  return distToStart > 500 ? (
-                    <p className="error walk-hud-msg">
-                      <AlertTriangle size={14} strokeWidth={2.25} style={{ flexShrink: 0 }} />
-                      <span>You're {Math.round(distToStart)} m from the route start. Head to <strong>{start.label || "the starting point"}</strong> first.</span>
-                    </p>
-                  ) : null;
-                })()}
-              </>
-            ) : null}
-            {pendingReport ? (
-              <div className="report-form">
-                <p className="report-form-label">What are you reporting?</p>
-                <select
-                  value={reportKind}
-                  onChange={(e) => setReportKind(e.target.value)}
-                >
-                  <option value="streetlight">Streetlight out</option>
-                  <option value="construction">Blocked sidewalk</option>
-                  <option value="harassment">Safety concern</option>
-                  <option value="other">Other</option>
-                </select>
-                <textarea
-                  value={reportMsg}
-                  onChange={(e) => setReportMsg(e.target.value)}
-                  placeholder="Short note (optional)"
-                />
-                <div className="actions-row">
-                  <button className="btn-primary" type="button" onClick={submitReport}>
-                    <Send size={14} strokeWidth={2.25} />
-                    Submit report
+                <div className="route-card-actions">
+                  <button
+                    className="btn-walk"
+                    type="button"
+                    disabled={!standard?.steps?.length}
+                    onClick={() => { setWalkMode("standard"); setFollowUser(true); setReportMode(false); }}
+                  >
+                    <Footprints size={14} strokeWidth={2.25} />
+                    Walk here
                   </button>
                   <button
-                    className="btn-ghost"
+                    className="btn-google-maps"
                     type="button"
-                    onClick={() => setPendingReport(null)}
+                    disabled={!standard?.geometry?.length}
+                    onClick={() => openRouteInGoogleMaps(standard)}
                   >
-                    Discard
+                    <ExternalLink size={14} strokeWidth={2.25} />
+                    Google Maps
                   </button>
                 </div>
+                {standard?.steps?.length ? (
+                  <details className="turn-list">
+                    <summary>
+                      <ChevronDown size={14} className="chevron" strokeWidth={2.5} />
+                      {standard.steps.length} turn-by-turn steps
+                    </summary>
+                    <ol>
+                      {standard.steps.map((st, i) => <li key={`s-${i}`}>{st.instruction}</li>)}
+                    </ol>
+                  </details>
+                ) : null}
               </div>
-            ) : null}
+
+              <div className={`route-card safe${walkMode === "safewalk" ? " route-card-walking" : ""}`}>
+                <div className="route-card-top">
+                  <div>
+                    <div className="route-card-title-row">
+                      <h3>SafeWalk Route</h3>
+                      {safewalk?.safety?.tier ? (
+                        <span className={tierPill(safewalk.safety.tier)}>
+                          {safewalk.safety.tier}
+                        </span>
+                      ) : null}
+                    </div>
+                    <p className="route-card-subtitle">Optimized for safety</p>
+                  </div>
+                  <ScoreRing
+                    score={safewalk?.safety?.score}
+                    tier={safewalk?.safety?.tier}
+                    description={scoreDescription(safewalk?.safety?.score, true)}
+                  />
+                </div>
+                <div className="route-stats-grid">
+                  <div className="route-stat">
+                    <span className="route-stat-value">
+                      <DurationLine durationMin={safewalk?.duration_min} />
+                    </span>
+                    <span className="route-stat-label">Time</span>
+                  </div>
+                  <div className="route-stat">
+                    <span className="route-stat-value">{safewalk ? `${safewalk.distance_km} km` : "—"}</span>
+                    <span className="route-stat-label">Distance</span>
+                  </div>
+                  <div className="route-stat">
+                    <span className="route-stat-value">{safewalk?.safety?.active_business_proximity_hits ?? "—"}</span>
+                    <span className="route-stat-label">Businesses</span>
+                  </div>
+                </div>
+                <div className="route-card-actions">
+                  <button
+                    className="btn-walk"
+                    type="button"
+                    disabled={!safewalk?.steps?.length}
+                    onClick={() => { setWalkMode("safewalk"); setFollowUser(true); setReportMode(false); }}
+                  >
+                    <Footprints size={14} strokeWidth={2.25} />
+                    Walk here
+                  </button>
+                  <button
+                    className="btn-google-maps"
+                    type="button"
+                    disabled={!safewalk?.geometry?.length}
+                    onClick={() => openRouteInGoogleMaps(safewalk)}
+                  >
+                    <ExternalLink size={14} strokeWidth={2.25} />
+                    Google Maps
+                  </button>
+                </div>
+                {safewalk?.steps?.length ? (
+                  <details className="turn-list">
+                    <summary>
+                      <ChevronDown size={14} className="chevron" strokeWidth={2.5} />
+                      {safewalk.steps.length} turn-by-turn steps
+                    </summary>
+                    <ol>
+                      {safewalk.steps.map((st, i) => <li key={`w-${i}`}>{st.instruction}</li>)}
+                    </ol>
+                  </details>
+                ) : null}
+              </div>
+            </>
+          ) : null}
+        </div>
+
+        {narration ? (
+          <div className="narration">
+            <header className="narration-header">
+              <Sparkles size={14} strokeWidth={2.5} />
+              AI Safety Summary
+            </header>
+            {narration}
+          </div>
+        ) : null}
+
+        <div className="report-section">
+          <div className="actions-row">
+            <button
+              className={reportMode ? "btn-primary" : "btn-ghost"}
+              type="button"
+              onClick={() => {
+                setReportMode((v) => !v);
+                setPendingReport(null);
+              }}
+            >
+              {reportMode ? (
+                <>
+                  <XCircle size={14} strokeWidth={2.25} />
+                  Cancel pin drop
+                </>
+              ) : (
+                <>
+                  <MapPin size={14} strokeWidth={2.25} />
+                  Report on map
+                </>
+              )}
+            </button>
+          </div>
+          {reportMode ? (
+            <p className="geo-hint">
+              Tap the map where the issue is. Reports affect safety scores for everyone.
+            </p>
+          ) : null}
+          {pendingReport ? (
+            <div className="report-form">
+              <p className="report-form-label">What are you reporting?</p>
+              <select
+                value={reportKind}
+                onChange={(e) => setReportKind(e.target.value)}
+              >
+                <option value="streetlight">Streetlight out</option>
+                <option value="construction">Blocked sidewalk</option>
+                <option value="harassment">Safety concern</option>
+                <option value="other">Other</option>
+              </select>
+              <textarea
+                value={reportMsg}
+                onChange={(e) => setReportMsg(e.target.value)}
+                placeholder="Short note (optional)"
+              />
+              <div className="actions-row">
+                <button className="btn-primary" type="button" onClick={submitReport}>
+                  <Send size={14} strokeWidth={2.25} />
+                  Submit report
+                </button>
+                <button
+                  className="btn-ghost"
+                  type="button"
+                  onClick={() => setPendingReport(null)}
+                >
+                  Discard
+                </button>
+              </div>
+            </div>
+          ) : null}
         </div>
       </aside>
 
@@ -1379,7 +1347,6 @@ export default function App() {
           center={DEFAULT_CENTER}
           zoom={13}
           scrollWheelZoom
-          preferCanvas={true}
         >
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -1408,26 +1375,23 @@ export default function App() {
             </Marker>
           ) : null}
 
-          {/* Standard Route */}
           {standard?.geometry?.length ? (
             <Polyline
               positions={standard.geometry.map(([lon, lat]) => [lat, lon])}
               pathOptions={
                 walkMode === "safewalk"
-                  ? { color: MAP_COLORS.standard, weight: 5, opacity: 0.22, noClip: true, renderer: fastRenderer }
-                  : { color: MAP_COLORS.standard, weight: 7, opacity: 0.95, noClip: true, renderer: fastRenderer }
+                  ? { color: MAP_COLORS.standard, weight: 5, opacity: 0.22 }
+                  : { color: MAP_COLORS.standard, weight: 7, opacity: 0.95 }
               }
             />
           ) : null}
-
-          {/* SafeWalk Route */}
           {safewalk?.geometry?.length ? (
             <Polyline
               positions={safewalk.geometry.map(([lon, lat]) => [lat, lon])}
               pathOptions={
                 walkMode === "standard"
-                  ? { color: MAP_COLORS.safewalk, weight: 5, opacity: 0.22, noClip: true, renderer: fastRenderer }
-                  : { color: MAP_COLORS.safewalk, weight: 7, opacity: 0.95, noClip: true, renderer: fastRenderer }
+                  ? { color: MAP_COLORS.safewalk, weight: 5, opacity: 0.22 }
+                  : { color: MAP_COLORS.safewalk, weight: 7, opacity: 0.95 }
               }
             />
           ) : null}
@@ -1617,5 +1581,6 @@ export default function App() {
         ) : null}
       </div>
     </div>
+    </>
   );
 }

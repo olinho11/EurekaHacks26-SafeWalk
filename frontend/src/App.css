@@ -1057,6 +1057,27 @@ button:active:not(:disabled) {
   align-items: center;
 }
 
+.btn-settings-trigger {
+  background: var(--accent-dim);
+  border: 1px solid rgba(var(--accent-rgb), 0.25);
+  border-radius: var(--r-sm);
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+
+.btn-settings-trigger:hover {
+  background: rgba(var(--accent-rgb), 0.2);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+  transform: rotate(30deg);
+}
+
 .icon-btn {
   background: transparent;
   border: 1px solid transparent;
