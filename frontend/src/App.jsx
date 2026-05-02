@@ -42,6 +42,7 @@ import {
   Footprints,
   Send,
 } from "lucide-react";
+import logo from "./assets/logo.png";
 
 // Fix default marker icons in bundlers (Vite)
 delete L.Icon.Default.prototype._getIconUrl;
@@ -751,7 +752,7 @@ export default function App() {
         <div className="brand">
           <div className="brand-header">
             <img
-              src="/logo.png"
+              src={logo}
               alt="SafeWalk"
               className="brand-logo-img"
               width="56"
