@@ -77,7 +77,36 @@ body {
 @media (max-width: 960px) {
   .app-shell {
     grid-template-columns: 1fr;
-    grid-template-rows: auto 50vh;
+    grid-template-rows: 45vh 1fr;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  .map-wrap {
+    order: -1;
+    height: 45vh;
+    min-height: 0;
+  }
+
+  .leaflet-container {
+    min-height: unset;
+    height: 100%;
+  }
+
+  .side-panel {
+    order: 1;
+    overflow-y: auto;
+    padding: var(--sp-4);
+    gap: var(--sp-4);
+    height: 100%;
+  }
+
+  .route-stats-grid {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+
+  .route-card-actions {
+    grid-template-columns: 1fr 1fr;
   }
 }
 
