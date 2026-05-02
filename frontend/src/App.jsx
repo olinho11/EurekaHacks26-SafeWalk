@@ -41,15 +41,23 @@ import {
   Zap,
   Footprints,
   Send,
+<<<<<<< HEAD
   X,
+=======
+  Settings as SettingsIcon,
+>>>>>>> 34fe9137f816b053c36595948a1ab1ec2c4a8ece
   Palette,
   Info,
   ShieldCheck,
   FileText,
   Heart,
+<<<<<<< HEAD
   Clock,
   Ruler,
   Building2
+=======
+  X,
+>>>>>>> 34fe9137f816b053c36595948a1ab1ec2c4a8ece
 } from "lucide-react";
 import logo from "./assets/logo.png";
 import Onboarding from "./Onboarding";
@@ -108,20 +116,14 @@ function SettingsModal({ open, onClose, theme, onThemeChange }) {
               return (
                 <button
                   key={tab.id}
-                  type="button"
-                  className={`settings-nav-item${activeTab === tab.id ? " active" : ""}`}
+                  className={`settings-nav-btn${activeTab === tab.id ? " active" : ""}`}
                   onClick={() => setActiveTab(tab.id)}
                 >
-                  <span className="settings-nav-icon">
-                    <Icon size={14} strokeWidth={2.5} />
-                  </span>
-                  <span>{tab.label}</span>
+                  <Icon size={16} strokeWidth={2.25} />
+                  {tab.label}
                 </button>
               );
             })}
-            <div className="settings-nav-footer">
-              <span className="app-version">SafeWalk v{APP_VERSION}</span>
-            </div>
           </nav>
 
           <div className="settings-panel" key={activeTab}>
@@ -279,9 +281,6 @@ const MAP_COLORS = {
   reportStroke: "#f0b429",
   pendingMark: "#3ee6b0",
 };
-
-// --- FUNCTIONAL FIX: Create a renderer that updates during movement ---
-const fastRenderer = L.canvas({ padding: 0.5, updateWhenIdle: false });
 
 /** Avoids "Unexpected end of JSON input" when the proxy/API returns an empty body (backend off). */
 async function readJsonResponse(response) {
@@ -1022,33 +1021,60 @@ export default function App() {
     loadReports();
   };
 
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    return !localStorage.getItem("safewalk_onboarded");
+  });
+  const [showSettings, setShowSettings] = useState(false);
+  const [theme, setTheme] = useState(() => localStorage.getItem("safewalk_theme") || "teal");
+
+  // Apply theme to document
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("safewalk_theme", theme);
+  }, [theme]);
+
+  const toggleSettings = () => setShowSettings((v) => !v);
+
   const onMapPick = (latlng) => {
     setPendingReport(latlng);
   };
 
+  const completeOnboarding = () => {
+    setShowOnboarding(false);
+    localStorage.setItem("safewalk_onboarded", "true");
+  };
+
   return (
-    <div className="app-shell">
+    <>
+      {showOnboarding && <Onboarding onComplete={completeOnboarding} />}
+      <SettingsModal
+        open={showSettings}
+        onClose={() => setShowSettings(false)}
+        theme={theme}
+        onThemeChange={setTheme}
+      />
+      <div className="app-shell">
       <aside className="side-panel">
-        <div className="brand">
-          <div className="brand-header">
-            <img
-              src="/logo.png"
-              alt="SafeWalk"
-              className="brand-logo-img"
-              width="56"
-              height="56"
-            />
-            <h1 className="brand-wordmark">SafeWalk</h1>
+          <div className="brand">
+            <div className="brand-header">
+              <img
+                src={logo}
+                alt="SafeWalk"
+                className="brand-logo-img"
+                width="56"
+                height="56"
+              />
+              <h1 className="brand-wordmark">SafeWalk</h1>
+              <button
+                className="btn-settings-trigger"
+                onClick={toggleSettings}
+                aria-label="Settings"
+                title="Settings"
+              >
+                <SettingsIcon size={20} strokeWidth={2.25} />
+              </button>
+            </div>
           </div>
-          <p className="brand-tagline">
-            Navigation that favors natural surveillance — lit streets, foot
-            traffic, and open businesses — so you can reclaim the night.
-          </p>
-          <div className="stat-line">
-            <strong>60%</strong> of people feel more anxious walking home after
-            9 PM. SafeWalk routes for presence, not just minutes.
-          </div>
-        </div>
 
           <LocationAutocomplete
             id="sw-start"
@@ -1558,7 +1584,6 @@ export default function App() {
           center={DEFAULT_CENTER}
           zoom={13}
           scrollWheelZoom
-          preferCanvas={true}
         >
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -1587,26 +1612,23 @@ export default function App() {
             </Marker>
           ) : null}
 
-          {/* Standard Route */}
           {standard?.geometry?.length ? (
             <Polyline
               positions={standard.geometry.map(([lon, lat]) => [lat, lon])}
               pathOptions={
                 walkMode === "safewalk"
-                  ? { color: MAP_COLORS.standard, weight: 5, opacity: 0.22, noClip: true, renderer: fastRenderer }
-                  : { color: MAP_COLORS.standard, weight: 7, opacity: 0.95, noClip: true, renderer: fastRenderer }
+                  ? { color: MAP_COLORS.standard, weight: 5, opacity: 0.22 }
+                  : { color: MAP_COLORS.standard, weight: 7, opacity: 0.95 }
               }
             />
           ) : null}
-
-          {/* SafeWalk Route */}
           {safewalk?.geometry?.length ? (
             <Polyline
               positions={safewalk.geometry.map(([lon, lat]) => [lat, lon])}
               pathOptions={
                 walkMode === "standard"
-                  ? { color: MAP_COLORS.safewalk, weight: 5, opacity: 0.22, noClip: true, renderer: fastRenderer }
-                  : { color: MAP_COLORS.safewalk, weight: 7, opacity: 0.95, noClip: true, renderer: fastRenderer }
+                  ? { color: MAP_COLORS.safewalk, weight: 5, opacity: 0.22 }
+                  : { color: MAP_COLORS.safewalk, weight: 7, opacity: 0.95 }
               }
             />
           ) : null}
@@ -1796,5 +1818,6 @@ export default function App() {
         ) : null}
       </div>
     </div>
+    </>
   );
 }
