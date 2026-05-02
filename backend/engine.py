@@ -237,37 +237,7 @@ def geom_signature(geom: list[list[float]]) -> str:
 def finalize_safety_scores(
     scored: list[tuple[Any, dict[str, Any], Any]],
 ) -> None:
-    """
-    Turn raw route-only signals into a 16–96 display score with strong separation
-    between alternatives. When raw spread is tiny, blend in rank so judges always
-    see a meaningful gap.
-    """
-    if not scored:
-        return
-    n = len(scored)
-    raws = [float(x[1]["raw_safety"]) for x in scored]
-    mn, mx = min(raws), max(raws)
-    span = max(mx - mn, 1e-6)
-
-    order = sorted(range(n), key=lambda i: raws[i])
-    rank_of = {idx: r for r, idx in enumerate(order)}
-
-    for i in range(n):
-        t_raw = (raws[i] - mn) / span
-        if n > 1:
-            t_rank = rank_of[i] / (n - 1)
-            # Small raw gap → lean on ordering so two routes never sit at +0.2 apart.
-            blend = max(0.0, 1.0 - min(span / 55.0, 1.0))
-            t = (1.0 - blend) * t_raw + blend * t_rank
-        else:
-            t = t_raw
-
-        # Stretch tails slightly so “great vs sketchy” reads like a big swing.
-        t = math.pow(max(0.0, min(1.0, t)), 0.88)
-
-        score = 16.0 + t * 80.0
-        scored[i][1]["score"] = round(score, 1)
-        scored[i][1].pop("raw_safety", None)
+    pass  # score already set by score_route_against_context
 
 
 def time_of_day_amenity_weight(hour: int) -> float:
@@ -283,89 +253,61 @@ def score_route_against_context(
     coords_lonlat: list[list[float]],
     ctx: dict[str, Any],
 ) -> dict[str, Any]:
-    """
-    Compute path-specific raw safety (no shared bbox terms—they identical for all
-    candidates and dampen contrast). Final 0–100 display score is assigned in
-    finalize_safety_scores().
-    """
     amenities = list(ctx.get("amenities") or [])
     if len(amenities) > 2000:
-        step = max(1, len(amenities) // 2000)
-        amenities = amenities[::step]
+        amenities = amenities[:: max(1, len(amenities) // 2000)]
+
     sample = sample_points_along_line(coords_lonlat)
-    radius_m = 95.0
+    n_sample = max(len(sample), 1)
     hits = 0
-    nearest_dists: list[float] = []
+    nearest_dists = []
 
     if sample and amenities:
         for plat, plon in sample:
-            best = min(
-                haversine_m(plat, plon, alat, alon) for alat, alon in amenities
-            )
+            best = min(haversine_m(plat, plon, alat, alon) for alat, alon in amenities)
             nearest_dists.append(best)
-            if best <= radius_m:
+            if best <= 100.0:
                 hits += 1
-        sorted_nd = sorted(nearest_dists)
         mean_nearest = sum(nearest_dists) / len(nearest_dists)
-        median_nearest = sorted_nd[len(sorted_nd) // 2]
-        p90_nearest = sorted_nd[min(int(len(sorted_nd) * 0.9), len(sorted_nd) - 1)]
-        far_frac = sum(1 for d in nearest_dists if d > 175.0) / len(nearest_dists)
-        dead_frac = sum(1 for d in nearest_dists if d > 290.0) / len(nearest_dists)
+        dead_frac = sum(1 for d in nearest_dists if d > 300.0) / len(nearest_dists)
     elif sample:
-        mean_nearest = 395.0
-        median_nearest = 410.0
-        p90_nearest = 460.0
-        far_frac = 0.82
-        dead_frac = 0.48
+        mean_nearest = 400.0
+        dead_frac = 0.9
     else:
-        mean_nearest = median_nearest = p90_nearest = 500.0
-        far_frac = 1.0
+        mean_nearest = 400.0
         dead_frac = 1.0
-
-    length_km = max(0.05, route_length_km(coords_lonlat))
-    n_sample = max(len(sample), 1)
 
     hour = datetime.datetime.now().hour
     time_weight = time_of_day_amenity_weight(hour)
 
-    # Wide dynamic range; higher = safer. Steeper exp = bigger swings from small path changes.
-    proximity_peak = 580.0 * math.exp(-mean_nearest / 68.0)
-    median_peak = 310.0 * math.exp(-median_nearest / 78.0)
-    tail_penalty = 2.35 * max(0.0, p90_nearest - 88.0) ** 1.38
-    isolation_penalty = 380.0 * (far_frac ** 1.25) + 290.0 * (dead_frac ** 1.45)
-    coverage_boost = 240.0 * ((hits / n_sample) ** 0.92) * time_weight
+    # Three component scores, each 0.0-1.0
+    hit_score = hits / n_sample                              # % route within 100m of a business
+    proximity_score = max(0.0, 1.0 - mean_nearest / 280.0) # how close businesses are on average
+    continuity_score = 1.0 - dead_frac                     # % route NOT isolated from all amenities
 
-    raw_safety = (
-        proximity_peak
-        + median_peak
-        + coverage_boost
-        - tail_penalty
-        - isolation_penalty
-    )
-    raw_safety = max(0.0, raw_safety)
+    amenity_combined = 0.45 * hit_score + 0.35 * proximity_score + 0.20 * continuity_score
 
+    # Base 20 pts for any walkable route; up to 80 more from amenity signal (time-weighted)
+    score = 20.0 + 80.0 * amenity_combined * time_weight
+
+    # Crowdsourced report penalties
     reports = list(ctx.get("reports") or [])
-    report_penalty = 0.0
     if reports and sample:
+        penalty = 0.0
         for plat, plon in sample:
             for rep in reports:
                 dist_m = haversine_m(plat, plon, rep["lat"], rep["lon"])
                 if dist_m < 150.0:
-                    kind = rep.get("kind", "other")
-                    kind_weight = {"streetlight": 1.8, "harassment": 1.6, "construction": 1.2}.get(
-                        kind, 1.0
-                    )
-                    penalty = kind_weight * 55.0 * math.exp(-dist_m / 45.0)
-                    report_penalty += penalty
-        report_penalty /= max(1, len(sample))
-    raw_safety = max(0.0, raw_safety - report_penalty)
+                    kind_weight = {"streetlight": 1.8, "harassment": 1.6, "construction": 1.2}.get(rep.get("kind", "other"), 1.0)
+                    penalty += kind_weight * 12.0 * math.exp(-dist_m / 50.0)
+        score -= penalty / max(1, len(sample))
 
     return {
-        "raw_safety": raw_safety,
+        "score": max(1.0, min(100.0, round(score, 1))),
         "active_business_proximity_hits": hits,
         "mean_nearest_amenity_m": round(mean_nearest, 1),
         "sample_points": len(sample),
-        "length_km": round(length_km, 2),
+        "length_km": round(route_length_km(coords_lonlat), 2),
         "lit_osm_hint": ctx.get("lit_ways_count", 0),
     }
 
@@ -427,6 +369,19 @@ def compute_routes(
     end_lat: float,
     end_lon: float,
 ) -> dict[str, Any]:
+    straight_m = haversine_m(start_lat, start_lon, end_lat, end_lon)
+
+    if straight_m < 50:
+        return {"error": "Start and destination are the same place.", "standard": None, "safewalk": None}
+
+    if straight_m > 10_000:
+        km = round(straight_m / 1000, 1)
+        return {
+            "error": f"That's about {km} km away — too far to walk safely. SafeWalk is designed for walks under 10 km. Try a closer destination or use transit.",
+            "standard": None,
+            "safewalk": None,
+        }
+
     south, west, north, east = bbox_pad(start_lat, start_lon, end_lat, end_lon, pad=0.015)
     ctx = overpass_context(south, west, north, east)
     ctx["reports"] = load_reports()
@@ -472,6 +427,18 @@ def compute_routes(
             "context": {"bbox": [south, west, north, east]},
         }
 
+    # Drop any candidates that are unreasonably long to walk (> 90 min or > 15 km routed)
+    candidates = [
+        (rt, geom) for rt, geom in candidates
+        if rt.get("duration_s", 0) <= 5400 and rt.get("distance_m", 0) <= 15_000
+    ]
+    if not candidates:
+        return {
+            "error": "The route found is too long to walk safely (over 90 minutes). Try a closer destination or use transit.",
+            "standard": None,
+            "safewalk": None,
+        }
+
     scored: list[tuple[dict[str, Any], dict[str, Any], list[list[float]]]] = []
     for rt, geom in candidates:
         details = score_route_against_context(geom, ctx)
@@ -491,9 +458,9 @@ def compute_routes(
         rt, details, geom = item
         tier = (
             "green"
-            if details["score"] >= 72
+            if details["score"] >= 65
             else "amber"
-            if details["score"] >= 44
+            if details["score"] >= 35
             else "red"
         )
         dm = float(rt.get("distance_m", route_length_km(geom) * 1000.0))
@@ -512,6 +479,7 @@ def compute_routes(
 
     std_sig = geom_signature(standard[2])
     std_dur = standard[0].get("duration_s", 0)
+    std_score = standard[1]["score"]
 
     def resafe(target_item: tuple) -> None:
         nonlocal safe_pkg, safewalk
@@ -524,13 +492,14 @@ def compute_routes(
             key=lambda x: (-x[1]["score"], -x[0].get("duration_s", 0)),
         )
         for item in ordered:
-            if geom_signature(item[2]) != std_sig:
+            if geom_signature(item[2]) != std_sig and item[1]["score"] >= std_score:
                 resafe(item)
                 break
 
     if geom_signature(safewalk[2]) == std_sig:
         slower = [
-            x for x in scored if x[0].get("duration_s", 0) > std_dur + 40.0
+            x for x in scored
+            if x[0].get("duration_s", 0) > std_dur + 40.0 and x[1]["score"] >= std_score
         ]
         if slower:
             pick = max(slower, key=lambda x: (x[1]["score"], x[0].get("duration_s", 0)))

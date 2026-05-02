@@ -119,6 +119,14 @@ function tierPill(tier) {
   return "pill red";
 }
 
+function scoreDescription(score) {
+  if (score == null) return null;
+  if (score >= 75) return "Excellent — well-lit streets with lots of open businesses and foot traffic the whole way. Safe to walk at any hour.";
+  if (score >= 55) return "Good — solid lighting and plenty of businesses nearby. Most people would feel comfortable on this route.";
+  if (score >= 35) return "Moderate — some stretches are quieter or darker. Fine during the day; take extra care at night.";
+  return "Low — limited lighting and few open businesses along this path. Consider taking the SafeWalk route instead.";
+}
+
 /** `durationMin` is decimal minutes from the API. */
 function formatDurationMinutes(durationMin) {
   if (durationMin == null || Number.isNaN(Number(durationMin))) return "—";
@@ -384,7 +392,7 @@ export default function App() {
   const [voiceGuidance, setVoiceGuidance] = useState(true);
   const lastSpokenStep = useRef(-1);
 
-  const apiBase = "";
+  const apiBase = import.meta.env.VITE_API_BASE || "";
 
   const activeWalkRoute =
     walkMode === "safewalk"
@@ -755,9 +763,7 @@ export default function App() {
                 </span>
                 <span className="safety-score-label">Safety</span>
                 <div className="safety-tooltip">
-                  Score out of 500 — measures lit streets, open businesses, and foot traffic along the route.
-                  <br /><br />
-                  <strong style={{color:"#8cf5d1"}}>Green</strong> ≥ 300 · <strong style={{color:"#ffd875"}}>Amber</strong> ≥ 150 · <strong style={{color:"#ff8f99"}}>Red</strong> = low surveillance
+                  {scoreDescription(standard?.safety?.score)}
                 </div>
               </div>
             </div>
@@ -825,9 +831,7 @@ export default function App() {
                 </span>
                 <span className="safety-score-label">Safety</span>
                 <div className="safety-tooltip">
-                  Score out of 500 — measures lit streets, open businesses, and foot traffic along the route.
-                  <br /><br />
-                  <strong style={{color:"#8cf5d1"}}>Green</strong> ≥ 300 · <strong style={{color:"#ffd875"}}>Amber</strong> ≥ 150 · <strong style={{color:"#ff8f99"}}>Red</strong> = low surveillance
+                  {scoreDescription(safewalk?.safety?.score)}
                 </div>
               </div>
             </div>

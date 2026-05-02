@@ -308,7 +308,7 @@ button:active:not(:disabled) {
   border-radius: 16px;
   border: 1.5px solid var(--border);
   background: var(--panel-raised);
-  overflow: hidden;
+  overflow: visible;
   transition: box-shadow 0.2s;
 }
 
@@ -360,6 +360,8 @@ button:active:not(:disabled) {
   padding: 0.45rem 0.6rem;
   border-radius: 12px;
   flex-shrink: 0;
+  position: relative;
+  cursor: help;
 }
 
 .safety-badge.danger {
@@ -457,6 +459,8 @@ button:active:not(:disabled) {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0;
+  border-radius: 0 0 14px 14px;
+  overflow: hidden;
 }
 
 .btn-walk {
