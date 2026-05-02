@@ -960,6 +960,7 @@ export default function App() {
         return;
       }
       const j = await readJsonResponse(r);
+      console.log("narrate response:", j);
       setNarration(j.text || "Reasoning unavailable — no response from AI.");
     } catch {
       setNarration("Reasoning unavailable — could not reach the backend.");
@@ -1338,9 +1339,9 @@ export default function App() {
           <div className="narration">
             <header className="narration-header">
               <Sparkles size={14} strokeWidth={2.5} />
-              AI Safety Summary
+              Reasoning
             </header>
-            {narration}
+            <p style={{ color: "var(--text)", fontSize: "var(--text-sm)", lineHeight: 1.65, marginTop: "4px" }}>{narration}</p>
           </div>
         ) : null}
 

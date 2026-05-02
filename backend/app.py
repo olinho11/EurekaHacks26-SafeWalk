@@ -86,25 +86,30 @@ def narrate():
 
         lines = []
 
+        routes_are_equal = score_gap is not None and score_gap == 0
+
         # Opening — score comparison
         if score_gap is not None and score_gap > 0:
             lines.append(
                 f"SafeWalk chose the {round(safe_s)}/100 route over the faster {round(std_s)}/100 option — "
                 f"a {score_gap}-point safety advantage."
             )
-        elif score_gap == 0:
-            lines.append(f"Both routes score {round(safe_s)}/100 — the area has consistent lighting and activity.")
+        elif routes_are_equal:
+            lines.append(
+                f"Both routes score {round(safe_s)}/100 in this area — lighting and business density "
+                f"are similar along both paths."
+            )
         else:
             lines.append(f"The routes score similarly ({round(safe_s) if safe_s else '?'} vs {round(std_s) if std_s else '?'}/100).")
 
-        # Lighting detail
-        if safe_lit is not None:
+        # Lighting detail — skip if routes are equal and lit % is tiny (misleading)
+        if safe_lit is not None and not (routes_are_equal and round(safe_lit) < 5):
             if lit_gap is not None and lit_gap >= 5:
                 lines.append(
                     f"The SafeWalk route has {round(safe_lit)}% lit road coverage — "
                     f"{lit_gap} percentage points more than the fastest path."
                 )
-            else:
+            elif not routes_are_equal:
                 lines.append(f"{round(safe_lit)}% of the SafeWalk route runs along lit roads.")
 
         # Business detail
@@ -114,16 +119,21 @@ def narrate():
                     f"It passes {safe_biz} active {'business' if safe_biz == 1 else 'businesses'} — "
                     f"{biz_gap} more than the direct route — keeping natural surveillance high."
                 )
-            elif safe_biz > 0:
+            elif safe_biz > 0 and not routes_are_equal:
                 lines.append(f"{safe_biz} active {'business' if safe_biz == 1 else 'businesses'} line the route, providing natural surveillance.")
 
         # Isolation note
         if safe_iso is not None and safe_iso > 20:
             lines.append(f"About {round(safe_iso)}% of the route has limited lighting and amenities — stay alert in those stretches.")
 
-        # Time cost
+        # Time cost — only mention trade-off if there's actually a safety gain
         if extra_min is not None and extra_min > 0:
-            lines.append(f"It adds {extra_min} {'minute' if extra_min == 1 else 'minutes'} to your walk — a small trade-off for significantly better visibility.")
+            if score_gap is not None and score_gap > 0:
+                lines.append(f"It adds {extra_min} {'minute' if extra_min == 1 else 'minutes'} — a worthwhile trade-off for {score_gap} points of extra safety.")
+            elif routes_are_equal:
+                lines.append(f"The SafeWalk route takes {extra_min} {'minute' if extra_min == 1 else 'minutes'} longer with no safety advantage here — both routes are equivalent.")
+            else:
+                lines.append(f"Walk time is about {fmt_min(safe_dm)} minutes.")
         elif safe_dm is not None:
             lines.append(f"Total walk time is about {fmt_min(safe_dm)} minutes.")
 
