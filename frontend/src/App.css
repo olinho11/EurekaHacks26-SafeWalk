@@ -98,9 +98,29 @@ body {
     order: 1;
     overflow-y: auto;
     overflow-x: hidden;
-    padding: var(--sp-4);
-    gap: var(--sp-4);
+    padding: var(--sp-3);
+    gap: var(--sp-3);
     height: 55vh;
+    font-size: 0.85rem;
+  }
+
+  .side-panel h1,
+  .side-panel h2,
+  .side-panel h3 {
+    font-size: 0.95rem;
+  }
+
+  .btn {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+  }
+
+  .route-stat-value {
+    font-size: 0.85rem;
+  }
+
+  .route-stat-label {
+    font-size: 0.65rem;
   }
 
   .route-stats-grid {
