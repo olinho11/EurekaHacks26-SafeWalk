@@ -65,6 +65,20 @@ const THEMES = [
   { id: "rose",   name: "Rose",   meta: "Warm",      color: "#ff82a5" },
 ];
 
+function SettingsSection({ icon: Icon, label, children }) {
+  return (
+    <section className="settings-section">
+      <div className="settings-section-header">
+        <span className="settings-section-icon">
+          <Icon size={14} strokeWidth={2.5} />
+        </span>
+        <span>{label}</span>
+      </div>
+      <div className="settings-section-body">{children}</div>
+    </section>
+  );
+}
+
 function SettingsModal({ open, onClose, theme, onThemeChange }) {
   useEffect(() => {
     if (!open) return;
@@ -83,75 +97,65 @@ function SettingsModal({ open, onClose, theme, onThemeChange }) {
     <div className="modal-backdrop" onClick={onClose} role="dialog" aria-modal="true">
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <header className="modal-header">
-          <h2>
-            <SettingsIcon size={18} strokeWidth={2.25} />
-            Settings
-            <span className="app-version">v{APP_VERSION}</span>
-          </h2>
+          <div className="modal-title">
+            <h2>Settings</h2>
+            <p className="modal-subtitle">Customize SafeWalk and review policies</p>
+          </div>
           <button className="modal-close" onClick={onClose} aria-label="Close settings">
             <X size={18} strokeWidth={2.5} />
           </button>
         </header>
 
         <div className="modal-body">
-          <section className="settings-section">
-            <div className="settings-section-header">
-              <Palette size={14} strokeWidth={2.5} />
-              Appearance
-            </div>
-            <p style={{ marginBottom: "var(--sp-3)" }}>
-              Pick an accent color. Safety tier colors (green / amber / red) stay fixed for clarity.
-            </p>
-            <div className="theme-picker">
-              {THEMES.map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  className={`theme-swatch${theme === t.id ? " active" : ""}`}
-                  onClick={() => onThemeChange(t.id)}
-                >
-                  <span
-                    className="theme-swatch-dot"
-                    style={{ background: t.color, color: t.color }}
-                  />
-                  <div>
-                    <div className="theme-swatch-name">{t.name}</div>
-                    <div className="theme-swatch-meta">{t.meta}</div>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </section>
-
-          <section className="settings-section">
-            <div className="settings-section-header">
-              <Info size={14} strokeWidth={2.5} />
-              About
-            </div>
+          <SettingsSection icon={Info} label="About">
             <div className="about-block">
-              <img src="/logo.png" alt="SafeWalk" />
+              <img src={logo} alt="SafeWalk" />
               <div className="about-block-text">
-                <span className="about-block-name">SafeWalk</span>
+                <div className="about-block-row">
+                  <span className="about-block-name">SafeWalk</span>
+                  <span className="app-version">v{APP_VERSION}</span>
+                </div>
                 <span className="about-block-tag">Pedestrian Safety Navigation</span>
               </div>
             </div>
             <p>
-              SafeWalk routes pedestrians by natural surveillance — lit streets,
-              foot traffic, and open businesses — instead of just shortest time. Built on the principle that safety
-              comes from <em>"eyes on the street"</em>, not from avoiding people.
+              SafeWalk routes pedestrians by natural surveillance — lit streets, foot traffic, and open businesses
+              — instead of just shortest time. Built on the principle that safety comes from{" "}
+              <em>"eyes on the street"</em>, not from avoiding people.
             </p>
-            <p>
-              The app compares the fastest path against an alternative optimized for visibility, lighting, and
-              activity. Crowdsourced reports adjust scores in real time so the community can flag dim corners and
-              construction without waiting for OSM updates.
-            </p>
-          </section>
+          </SettingsSection>
 
-          <section className="settings-section">
-            <div className="settings-section-header">
-              <ShieldCheck size={14} strokeWidth={2.5} />
-              Privacy Policy
+          <SettingsSection icon={Palette} label="Appearance">
+            <p className="settings-hint">
+              Accent color. Safety tier colors (green / amber / red) stay fixed for clarity.
+            </p>
+            <div className="theme-list">
+              {THEMES.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  className={`theme-row${theme === t.id ? " active" : ""}`}
+                  onClick={() => onThemeChange(t.id)}
+                >
+                  <span
+                    className="theme-row-dot"
+                    style={{ background: t.color, color: t.color }}
+                  />
+                  <span className="theme-row-text">
+                    <span className="theme-row-name">{t.name}</span>
+                    <span className="theme-row-meta">{t.meta}</span>
+                  </span>
+                  {theme === t.id ? (
+                    <CheckCircle2 size={18} strokeWidth={2.25} className="theme-row-check" />
+                  ) : (
+                    <span className="theme-row-check-empty" />
+                  )}
+                </button>
+              ))}
             </div>
+          </SettingsSection>
+
+          <SettingsSection icon={ShieldCheck} label="Privacy Policy">
             <p>
               <strong>SafeWalk does not collect, store, or transmit personal information.</strong> Your location is
               used only on-device to draw your position on the map and snap to the route during walk mode. It is
@@ -166,13 +170,9 @@ function SettingsModal({ open, onClose, theme, onThemeChange }) {
               Community safety reports include only the coordinates you tap, the issue type, and your optional note.
               No account, identifier, or device fingerprint is attached.
             </p>
-          </section>
+          </SettingsSection>
 
-          <section className="settings-section">
-            <div className="settings-section-header">
-              <FileText size={14} strokeWidth={2.5} />
-              Terms of Service
-            </div>
+          <SettingsSection icon={FileText} label="Terms of Service">
             <p>
               SafeWalk is provided "as is" for informational purposes. Safety scores are heuristic estimates derived
               from open map data, not guarantees. <strong>Always trust your own judgment</strong> when walking,
@@ -186,30 +186,23 @@ function SettingsModal({ open, onClose, theme, onThemeChange }) {
               Submitted reports become part of the public dataset that informs scores for all users. Do not include
               personal information in report notes.
             </p>
-          </section>
+          </SettingsSection>
 
-          <section className="settings-section">
-            <div className="settings-section-header">
-              <Heart size={14} strokeWidth={2.5} />
-              Built With
-            </div>
+          <SettingsSection icon={Heart} label="Built With">
             <p>
-              Open data and open source, all the way down. Massive thanks to the volunteers who maintain the maps the
-              world depends on.
+              Open data and open source, all the way down. Thanks to the volunteers who maintain the maps the world
+              depends on.
             </p>
             <div className="tech-list">
-              <span className="tech-tag">React</span>
-              <span className="tech-tag">Vite</span>
-              <span className="tech-tag">Leaflet</span>
-              <span className="tech-tag">Lucide Icons</span>
-              <span className="tech-tag">Flask</span>
-              <span className="tech-tag">OSRM</span>
-              <span className="tech-tag">Overpass API</span>
-              <span className="tech-tag">Nominatim</span>
-              <span className="tech-tag">OpenStreetMap</span>
-              <span className="tech-tag">Claude Haiku</span>
+              {[
+                "React", "Vite", "Leaflet", "Lucide Icons",
+                "Flask", "OSRM", "Overpass API", "Nominatim",
+                "OpenStreetMap", "Claude Haiku",
+              ].map((t) => (
+                <span key={t} className="tech-tag">{t}</span>
+              ))}
             </div>
-          </section>
+          </SettingsSection>
         </div>
       </div>
     </div>
