@@ -41,7 +41,179 @@ import {
   Zap,
   Footprints,
   Send,
+  Settings as SettingsIcon,
+  X,
+  Palette,
+  Info,
+  ShieldCheck,
+  FileText,
+  Heart,
+  Clock,
+  Building2,
+  Ruler,
+  Loader2,
 } from "lucide-react";
+
+const APP_VERSION = "1.0.0";
+
+const THEMES = [
+  { id: "teal",   name: "Teal",   meta: "Default",   color: "#3ee6b0" },
+  { id: "amber",  name: "Amber",  meta: "Lamplight", color: "#f0c350" },
+  { id: "blue",   name: "Blue",   meta: "Cool",      color: "#6ea5ff" },
+  { id: "purple", name: "Purple", meta: "Twilight",  color: "#b07cff" },
+  { id: "rose",   name: "Rose",   meta: "Warm",      color: "#ff82a5" },
+];
+
+function SettingsModal({ open, onClose, theme, onThemeChange }) {
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  return (
+    <div className="modal-backdrop" onClick={onClose} role="dialog" aria-modal="true">
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <header className="modal-header">
+          <h2>
+            <SettingsIcon size={18} strokeWidth={2.25} />
+            Settings
+            <span className="app-version">v{APP_VERSION}</span>
+          </h2>
+          <button className="modal-close" onClick={onClose} aria-label="Close settings">
+            <X size={18} strokeWidth={2.5} />
+          </button>
+        </header>
+
+        <div className="modal-body">
+          <section className="settings-section">
+            <div className="settings-section-header">
+              <Palette size={14} strokeWidth={2.5} />
+              Appearance
+            </div>
+            <p style={{ marginBottom: "var(--sp-3)" }}>
+              Pick an accent color. Safety tier colors (green / amber / red) stay fixed for clarity.
+            </p>
+            <div className="theme-picker">
+              {THEMES.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  className={`theme-swatch${theme === t.id ? " active" : ""}`}
+                  onClick={() => onThemeChange(t.id)}
+                >
+                  <span
+                    className="theme-swatch-dot"
+                    style={{ background: t.color, color: t.color }}
+                  />
+                  <div>
+                    <div className="theme-swatch-name">{t.name}</div>
+                    <div className="theme-swatch-meta">{t.meta}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section className="settings-section">
+            <div className="settings-section-header">
+              <Info size={14} strokeWidth={2.5} />
+              About
+            </div>
+            <div className="about-block">
+              <img src="/logo.png" alt="SafeWalk" />
+              <div className="about-block-text">
+                <span className="about-block-name">SafeWalk</span>
+                <span className="about-block-tag">Pedestrian Safety Navigation</span>
+              </div>
+            </div>
+            <p>
+              SafeWalk routes pedestrians by natural surveillance — lit streets,
+              foot traffic, and open businesses — instead of just shortest time. Built on the principle that safety
+              comes from <em>"eyes on the street"</em>, not from avoiding people.
+            </p>
+            <p>
+              The app compares the fastest path against an alternative optimized for visibility, lighting, and
+              activity. Crowdsourced reports adjust scores in real time so the community can flag dim corners and
+              construction without waiting for OSM updates.
+            </p>
+          </section>
+
+          <section className="settings-section">
+            <div className="settings-section-header">
+              <ShieldCheck size={14} strokeWidth={2.5} />
+              Privacy Policy
+            </div>
+            <p>
+              <strong>SafeWalk does not collect, store, or transmit personal information.</strong> Your location is
+              used only on-device to draw your position on the map and snap to the route during walk mode. It is
+              never sent to our servers or any third party.
+            </p>
+            <p>
+              Address autocomplete queries are forwarded to OpenStreetMap's Nominatim service. Map tiles and routing
+              come from OpenStreetMap. Voice guidance uses your browser's built-in speech synthesis — nothing is
+              uploaded.
+            </p>
+            <p>
+              Community safety reports include only the coordinates you tap, the issue type, and your optional note.
+              No account, identifier, or device fingerprint is attached.
+            </p>
+          </section>
+
+          <section className="settings-section">
+            <div className="settings-section-header">
+              <FileText size={14} strokeWidth={2.5} />
+              Terms of Service
+            </div>
+            <p>
+              SafeWalk is provided "as is" for informational purposes. Safety scores are heuristic estimates derived
+              from open map data, not guarantees. <strong>Always trust your own judgment</strong> when walking,
+              especially after dark.
+            </p>
+            <p>
+              By using SafeWalk you agree not to submit false reports, abuse the routing service, or rely on the app
+              as a substitute for emergency services. In an emergency, contact local authorities directly.
+            </p>
+            <p>
+              Submitted reports become part of the public dataset that informs scores for all users. Do not include
+              personal information in report notes.
+            </p>
+          </section>
+
+          <section className="settings-section">
+            <div className="settings-section-header">
+              <Heart size={14} strokeWidth={2.5} />
+              Built With
+            </div>
+            <p>
+              Open data and open source, all the way down. Massive thanks to the volunteers who maintain the maps the
+              world depends on.
+            </p>
+            <div className="tech-list">
+              <span className="tech-tag">React</span>
+              <span className="tech-tag">Vite</span>
+              <span className="tech-tag">Leaflet</span>
+              <span className="tech-tag">Lucide Icons</span>
+              <span className="tech-tag">Flask</span>
+              <span className="tech-tag">OSRM</span>
+              <span className="tech-tag">Overpass API</span>
+              <span className="tech-tag">Nominatim</span>
+              <span className="tech-tag">OpenStreetMap</span>
+              <span className="tech-tag">Claude Haiku</span>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // Fix default marker icons in bundlers (Vite)
 delete L.Icon.Default.prototype._getIconUrl;
@@ -468,7 +640,22 @@ export default function App() {
   const [geoError, setGeoError] = useState("");
   const [followUser, setFollowUser] = useState(true);
   const [voiceGuidance, setVoiceGuidance] = useState(true);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [theme, setTheme] = useState(() => {
+    if (typeof window === "undefined") return "teal";
+    return window.localStorage.getItem("safewalk-theme") || "teal";
+  });
   const lastSpokenStep = useRef(-1);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    if (theme === "teal") {
+      document.documentElement.removeAttribute("data-theme");
+    } else {
+      document.documentElement.setAttribute("data-theme", theme);
+    }
+    try { window.localStorage.setItem("safewalk-theme", theme); } catch {}
+  }, [theme]);
 
   const apiBase = import.meta.env.VITE_API_BASE || "";
 
@@ -758,6 +945,17 @@ export default function App() {
               height="56"
             />
             <h1 className="brand-wordmark">SafeWalk</h1>
+            <div className="brand-actions">
+              <button
+                type="button"
+                className="icon-btn"
+                onClick={() => setSettingsOpen(true)}
+                aria-label="Open settings"
+                title="Settings"
+              >
+                <SettingsIcon size={18} strokeWidth={2.25} />
+              </button>
+            </div>
           </div>
           <p className="brand-tagline">
             Navigation that favors natural surveillance — lit streets, foot
@@ -797,7 +995,10 @@ export default function App() {
             onClick={fetchRoutes}
           >
             {loading ? (
-              "Routing…"
+              <>
+                <Loader2 size={16} strokeWidth={2.5} className="spin" />
+                Routing…
+              </>
             ) : (
               <>
                 <Navigation size={16} strokeWidth={2.5} />
@@ -813,7 +1014,10 @@ export default function App() {
               onClick={runDemo}
             >
               {loading ? (
-                "Loading…"
+                <>
+                  <Loader2 size={14} strokeWidth={2.25} className="spin" />
+                  Loading…
+                </>
               ) : (
                 <>
                   <Zap size={14} strokeWidth={2.25} />
@@ -828,7 +1032,10 @@ export default function App() {
               disabled={narrateBusy || (!standard && !safewalk)}
             >
               {narrateBusy ? (
-                "Thinking…"
+                <>
+                  <Loader2 size={14} strokeWidth={2.25} className="spin" />
+                  Thinking…
+                </>
               ) : (
                 <>
                   <Sparkles size={14} strokeWidth={2.25} />
@@ -920,15 +1127,15 @@ export default function App() {
                     <span className="route-stat-value">
                       <DurationLine durationMin={standard?.duration_min} />
                     </span>
-                    <span className="route-stat-label">Time</span>
+                    <span className="route-stat-label"><Clock size={10} strokeWidth={2.5} />Time</span>
                   </div>
                   <div className="route-stat">
                     <span className="route-stat-value">{standard ? `${standard.distance_km} km` : "—"}</span>
-                    <span className="route-stat-label">Distance</span>
+                    <span className="route-stat-label"><Ruler size={10} strokeWidth={2.5} />Distance</span>
                   </div>
                   <div className="route-stat">
                     <span className="route-stat-value">{standard?.safety?.active_business_proximity_hits ?? "—"}</span>
-                    <span className="route-stat-label">Businesses</span>
+                    <span className="route-stat-label"><Building2 size={10} strokeWidth={2.5} />Businesses</span>
                   </div>
                 </div>
                 <div className="route-card-actions">
@@ -988,15 +1195,15 @@ export default function App() {
                     <span className="route-stat-value">
                       <DurationLine durationMin={safewalk?.duration_min} />
                     </span>
-                    <span className="route-stat-label">Time</span>
+                    <span className="route-stat-label"><Clock size={10} strokeWidth={2.5} />Time</span>
                   </div>
                   <div className="route-stat">
                     <span className="route-stat-value">{safewalk ? `${safewalk.distance_km} km` : "—"}</span>
-                    <span className="route-stat-label">Distance</span>
+                    <span className="route-stat-label"><Ruler size={10} strokeWidth={2.5} />Distance</span>
                   </div>
                   <div className="route-stat">
                     <span className="route-stat-value">{safewalk?.safety?.active_business_proximity_hits ?? "—"}</span>
-                    <span className="route-stat-label">Businesses</span>
+                    <span className="route-stat-label"><Building2 size={10} strokeWidth={2.5} />Businesses</span>
                   </div>
                 </div>
                 <div className="route-card-actions">
@@ -1346,6 +1553,13 @@ export default function App() {
           </div>
         ) : null}
       </div>
+
+      <SettingsModal
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        theme={theme}
+        onThemeChange={setTheme}
+      />
     </div>
   );
 }
