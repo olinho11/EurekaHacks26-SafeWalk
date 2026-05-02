@@ -66,12 +66,11 @@ body {
 .app-shell {
   display: grid;
   grid-template-columns: 460px 1fr;
-<<<<<<< HEAD
+
   height: 100vh;      /* Lock to viewport height */
   overflow: hidden;    /* Prevent whole-page scrolling */
-=======
-  min-height: 100vh;
->>>>>>> 34fe9137f816b053c36595948a1ab1ec2c4a8ece
+  height: 100vh;      /* Lock to viewport height */
+  overflow: hidden;    /* Prevent whole-page scrolling */
 }
 
 @media (max-width: 960px) {

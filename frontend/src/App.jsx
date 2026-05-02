@@ -1021,9 +1021,7 @@ export default function App() {
     loadReports();
   };
 
-  const [showOnboarding, setShowOnboarding] = useState(() => {
-    return !localStorage.getItem("safewalk_onboarded");
-  });
+
   const [showSettings, setShowSettings] = useState(false);
   const [theme, setTheme] = useState(() => localStorage.getItem("safewalk_theme") || "teal");
 
