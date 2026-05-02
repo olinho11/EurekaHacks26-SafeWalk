@@ -2,6 +2,8 @@
 
 > Navigation that favors natural surveillance — lit streets, foot traffic, and open businesses — so you can reclaim the night.
 
+**Live demo: [safewalk-eurekahacks.vercel.app](https://safewalk-eurekahacks.vercel.app)**
+
 SafeWalk is a pedestrian safety navigation app that routes you through streets with **natural surveillance** (Jane Jacobs' *"eyes on the street"* theory) rather than just the fastest path. It compares the fastest route against a safety-optimized alternative, scoring each on lighting, active businesses, and real-time community reports.
 
 ---
