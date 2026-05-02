@@ -1667,27 +1667,46 @@ button:active:not(:disabled) {
   position: fixed;
   inset: 0;
   z-index: 9999;
-  background: radial-gradient(circle at center, #101625 0%, #07090e 100%);
+  background: rgba(7, 9, 14, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: var(--sp-4);
   animation: fadeIn 0.4s ease;
+  overflow: hidden;
+}
+
+.onboarding-overlay::before {
+  content: "";
+  position: absolute;
+  top: -20%;
+  right: -10%;
+  width: 800px;
+  height: 800px;
+  background: radial-gradient(circle, rgba(var(--accent-rgb), 0.25) 0%, transparent 70%);
+  border-radius: 50%;
+  filter: blur(60px);
+  z-index: -1;
+  pointer-events: none;
 }
 
 .onboarding-card {
   width: 100%;
   max-width: 520px;
-  background: var(--panel);
-  border: 1px solid var(--border-light);
+  background: rgba(13, 17, 23, 0.65);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 24px;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 32px 64px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
   padding: var(--sp-8);
   display: flex;
   flex-direction: column;
   gap: var(--sp-6);
   position: relative;
-  overflow: hidden;
 }
 
 .onboarding-header {
@@ -1773,10 +1792,10 @@ button:active:not(:disabled) {
   grid-template-columns: 1fr;
   gap: var(--sp-3);
   text-align: left;
-  background: var(--panel-raised);
+  background: rgba(255, 255, 255, 0.03);
   padding: var(--sp-4);
   border-radius: 16px;
-  border: 1px solid var(--border);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .feature-item {
@@ -1832,12 +1851,13 @@ button:active:not(:disabled) {
   align-items: center;
   justify-content: center;
   gap: var(--sp-2);
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 20px var(--accent-glow);
 }
 
 .btn-onboarding-next:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 32px var(--accent-glow);
+  box-shadow: 0 0 30px var(--accent);
 }
 
 @keyframes fadeIn {

@@ -365,7 +365,7 @@ def route_length_km(coords_lonlat: list[list[float]]) -> float:
     return total / 1000.0
 
 
-def find_candidate_via_points(lat1: float, lon1: float, lat2: float, lon2: float) -> list[tuple[float, float]]:
+def find_candidate_via_points(lat1: float, lon1: float, lat2: float, lon2: float, ctx: dict[str, Any]) -> list[tuple[float, float]]:
     """
     Find via-points PERPENDICULAR to the A->B corridor so OSRM is forced to detour
     left or right of the direct path, producing genuinely different routes.
@@ -401,44 +401,27 @@ def find_candidate_via_points(lat1: float, lon1: float, lat2: float, lon2: float
     points: list[tuple[float, float]] = []
     seen: set[str] = set()
 
+    pool = ctx.get("amenities", []) + ctx.get("lit_way_centers", [])
+
     for slat, slon in search_origins:
-        query = f"""
-[out:json][timeout:20];
-(
-  node["amenity"~"^(cafe|restaurant|bar|pub|fuel|convenience|fast_food|pharmacy)$"](around:280,{slat},{slon});
-  way["lit"="yes"]["highway"~"^(primary|secondary|tertiary|residential)$"](around:280,{slat},{slon});
-);
-out center;
-"""
-        try:
-            with httpx.Client(timeout=25.0, headers={"User-Agent": "SafeWalk/1.0 (hackathon demo)"}) as client:
-                r = client.post(OVERPASS, content=query.encode("utf-8"))
-                r.raise_for_status()
-                data = r.json()
-            for el in data.get("elements") or []:
-                lat = el.get("lat")
-                lon = el.get("lon")
-                if lat is None and el.get("center"):
-                    lat = el["center"]["lat"]
-                    lon = el["center"]["lon"]
-                if lat is None or lon is None:
-                    continue
-                lat, lon = float(lat), float(lon)
-                # Must be genuinely off the direct corridor (> 80m perpendicular displacement)
-                d_to_start = haversine_m(lat1, lon1, lat, lon)
-                d_to_end = haversine_m(lat2, lon2, lat, lon)
-                d_chord = haversine_m(lat1, lon1, lat2, lon2)
-                # Reject if point is too close to direct line (on-corridor points)
-                excess = (d_to_start + d_to_end) - d_chord
-                if excess < 80:
-                    continue
-                key = f"{round(lat, 3)},{round(lon, 3)}"
-                if key in seen:
-                    continue
-                seen.add(key)
-                points.append((lat, lon))
-        except Exception:
-            continue
+        for lat, lon in pool:
+            if haversine_m(slat, slon, lat, lon) > 280:
+                continue
+            
+            # Must be genuinely off the direct corridor (> 80m perpendicular displacement)
+            d_to_start = haversine_m(lat1, lon1, lat, lon)
+            d_to_end = haversine_m(lat2, lon2, lat, lon)
+            
+            # Reject if point is too close to direct line (on-corridor points)
+            excess = (d_to_start + d_to_end) - straight_m
+            if excess < 80:
+                continue
+                
+            key = f"{round(lat, 3)},{round(lon, 3)}"
+            if key in seen:
+                continue
+            seen.add(key)
+            points.append((lat, lon))
 
     # Sort by how far off the corridor they are (more detour = more different route)
     def off_corridor(p: tuple[float, float]) -> float:
@@ -499,7 +482,7 @@ def compute_routes(
         add_candidate(rt)
 
     # 2) Biased "safe" routes via perpendicular OSM anchors (left/right of corridor)
-    vias = find_candidate_via_points(start_lat, start_lon, end_lat, end_lon)
+    vias = find_candidate_via_points(start_lat, start_lon, end_lat, end_lon, ctx)
     for via in vias[:4]:
         vl = (via[1], via[0])
         seg = fetch_osrm_route([start, vl, end], alternatives=False, include_steps=True)

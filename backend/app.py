@@ -49,7 +49,7 @@ def narrate():
     body = request.get_json(force=True, silent=True) or {}
     standard = body.get("standard")
     safewalk = body.get("safewalk")
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    hf_token = os.environ.get("HF_TOKEN")
 
     def fallback() -> str:
         same = body.get("same_route", False)
@@ -74,33 +74,34 @@ def narrate():
             f"About {dm} minutes."
         )
 
-    if not api_key:
+    if not hf_token:
         return jsonify({"text": fallback(), "source": "fallback"})
 
     try:
-        from anthropic import Anthropic
+        from huggingface_hub import InferenceClient
 
-        client = Anthropic(api_key=api_key)
-        message = client.messages.create(
-            model="claude-haiku-4-5-20251001",
+        client = InferenceClient(api_key=hf_token)
+        messages = [
+            {
+                "role": "system",
+                "content": "You are SafeWalk, a calm walking safety companion. Give 3-5 short sentences. Mention lighting, businesses, and route choice. No panic language; practical and reassuring.",
+            },
+            {
+                "role": "user",
+                "content": f"Compare routes for walking safety (JSON): {body}",
+            },
+        ]
+        response = client.chat_completion(
+            model="mistralai/Mistral-7B-Instruct-v0.3",
+            messages=messages,
             max_tokens=280,
-            system=(
-                "You are SafeWalk, a calm walking safety companion. "
-                "Give 3–5 short sentences. Mention lighting, businesses, and route choice. "
-                "No panic language; practical and reassuring."
-            ),
-            messages=[
-                {
-                    "role": "user",
-                    "content": f"Compare routes for walking safety (JSON): {body}",
-                }
-            ],
         )
-        text = message.content[0].text.strip() if message.content else ""
+        text = response.choices[0].message.content.strip() if response.choices else ""
         if not text:
             text = fallback()
-        return jsonify({"text": text, "source": "claude"})
-    except Exception:
+        return jsonify({"text": text, "source": "huggingface"})
+    except Exception as e:
+        print(f"HF Error: {e}")
         return jsonify({"text": fallback(), "source": "fallback"})
 
 
