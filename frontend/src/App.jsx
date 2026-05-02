@@ -54,6 +54,7 @@ import {
   Loader2,
 } from "lucide-react";
 import logo from "./assets/logo.png";
+import Onboarding from "./Onboarding";
 
 const APP_VERSION = "1.0.0";
 
@@ -64,20 +65,6 @@ const THEMES = [
   { id: "purple", name: "Purple", meta: "Twilight",  color: "#b07cff" },
   { id: "rose",   name: "Rose",   meta: "Warm",      color: "#ff82a5" },
 ];
-
-function SettingsSection({ icon: Icon, label, children }) {
-  return (
-    <section className="settings-section">
-      <div className="settings-section-header">
-        <span className="settings-section-icon">
-          <Icon size={14} strokeWidth={2.5} />
-        </span>
-        <span>{label}</span>
-      </div>
-      <div className="settings-section-body">{children}</div>
-    </section>
-  );
-}
 
 function SettingsModal({ open, onClose, theme, onThemeChange }) {
   useEffect(() => {
@@ -97,65 +84,75 @@ function SettingsModal({ open, onClose, theme, onThemeChange }) {
     <div className="modal-backdrop" onClick={onClose} role="dialog" aria-modal="true">
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <header className="modal-header">
-          <div className="modal-title">
-            <h2>Settings</h2>
-            <p className="modal-subtitle">Customize SafeWalk and review policies</p>
-          </div>
+          <h2>
+            <SettingsIcon size={18} strokeWidth={2.25} />
+            Settings
+            <span className="app-version">v{APP_VERSION}</span>
+          </h2>
           <button className="modal-close" onClick={onClose} aria-label="Close settings">
             <X size={18} strokeWidth={2.5} />
           </button>
         </header>
 
         <div className="modal-body">
-          <SettingsSection icon={Info} label="About">
-            <div className="about-block">
-              <img src={logo} alt="SafeWalk" />
-              <div className="about-block-text">
-                <div className="about-block-row">
-                  <span className="about-block-name">SafeWalk</span>
-                  <span className="app-version">v{APP_VERSION}</span>
-                </div>
-                <span className="about-block-tag">Pedestrian Safety Navigation</span>
-              </div>
+          <section className="settings-section">
+            <div className="settings-section-header">
+              <Palette size={14} strokeWidth={2.5} />
+              Appearance
             </div>
-            <p>
-              SafeWalk routes pedestrians by natural surveillance — lit streets, foot traffic, and open businesses
-              — instead of just shortest time. Built on the principle that safety comes from{" "}
-              <em>"eyes on the street"</em>, not from avoiding people.
+            <p style={{ marginBottom: "var(--sp-3)" }}>
+              Pick an accent color. Safety tier colors (green / amber / red) stay fixed for clarity.
             </p>
-          </SettingsSection>
-
-          <SettingsSection icon={Palette} label="Appearance">
-            <p className="settings-hint">
-              Accent color. Safety tier colors (green / amber / red) stay fixed for clarity.
-            </p>
-            <div className="theme-list">
+            <div className="theme-picker">
               {THEMES.map((t) => (
                 <button
                   key={t.id}
                   type="button"
-                  className={`theme-row${theme === t.id ? " active" : ""}`}
+                  className={`theme-swatch${theme === t.id ? " active" : ""}`}
                   onClick={() => onThemeChange(t.id)}
                 >
                   <span
-                    className="theme-row-dot"
+                    className="theme-swatch-dot"
                     style={{ background: t.color, color: t.color }}
                   />
-                  <span className="theme-row-text">
-                    <span className="theme-row-name">{t.name}</span>
-                    <span className="theme-row-meta">{t.meta}</span>
-                  </span>
-                  {theme === t.id ? (
-                    <CheckCircle2 size={18} strokeWidth={2.25} className="theme-row-check" />
-                  ) : (
-                    <span className="theme-row-check-empty" />
-                  )}
+                  <div>
+                    <div className="theme-swatch-name">{t.name}</div>
+                    <div className="theme-swatch-meta">{t.meta}</div>
+                  </div>
                 </button>
               ))}
             </div>
-          </SettingsSection>
+          </section>
 
-          <SettingsSection icon={ShieldCheck} label="Privacy Policy">
+          <section className="settings-section">
+            <div className="settings-section-header">
+              <Info size={14} strokeWidth={2.5} />
+              About
+            </div>
+            <div className="about-block">
+              <img src={logo} alt="SafeWalk" />
+              <div className="about-block-text">
+                <span className="about-block-name">SafeWalk</span>
+                <span className="about-block-tag">Pedestrian Safety Navigation</span>
+              </div>
+            </div>
+            <p>
+              SafeWalk routes pedestrians by natural surveillance — lit streets,
+              foot traffic, and open businesses — instead of just shortest time. Built on the principle that safety
+              comes from <em>"eyes on the street"</em>, not from avoiding people.
+            </p>
+            <p>
+              The app compares the fastest path against an alternative optimized for visibility, lighting, and
+              activity. Crowdsourced reports adjust scores in real time so the community can flag dim corners and
+              construction without waiting for OSM updates.
+            </p>
+          </section>
+
+          <section className="settings-section">
+            <div className="settings-section-header">
+              <ShieldCheck size={14} strokeWidth={2.5} />
+              Privacy Policy
+            </div>
             <p>
               <strong>SafeWalk does not collect, store, or transmit personal information.</strong> Your location is
               used only on-device to draw your position on the map and snap to the route during walk mode. It is
@@ -170,9 +167,13 @@ function SettingsModal({ open, onClose, theme, onThemeChange }) {
               Community safety reports include only the coordinates you tap, the issue type, and your optional note.
               No account, identifier, or device fingerprint is attached.
             </p>
-          </SettingsSection>
+          </section>
 
-          <SettingsSection icon={FileText} label="Terms of Service">
+          <section className="settings-section">
+            <div className="settings-section-header">
+              <FileText size={14} strokeWidth={2.5} />
+              Terms of Service
+            </div>
             <p>
               SafeWalk is provided "as is" for informational purposes. Safety scores are heuristic estimates derived
               from open map data, not guarantees. <strong>Always trust your own judgment</strong> when walking,
@@ -186,23 +187,30 @@ function SettingsModal({ open, onClose, theme, onThemeChange }) {
               Submitted reports become part of the public dataset that informs scores for all users. Do not include
               personal information in report notes.
             </p>
-          </SettingsSection>
+          </section>
 
-          <SettingsSection icon={Heart} label="Built With">
+          <section className="settings-section">
+            <div className="settings-section-header">
+              <Heart size={14} strokeWidth={2.5} />
+              Built With
+            </div>
             <p>
-              Open data and open source, all the way down. Thanks to the volunteers who maintain the maps the world
-              depends on.
+              Open data and open source, all the way down. Massive thanks to the volunteers who maintain the maps the
+              world depends on.
             </p>
             <div className="tech-list">
-              {[
-                "React", "Vite", "Leaflet", "Lucide Icons",
-                "Flask", "OSRM", "Overpass API", "Nominatim",
-                "OpenStreetMap", "Claude Haiku",
-              ].map((t) => (
-                <span key={t} className="tech-tag">{t}</span>
-              ))}
+              <span className="tech-tag">React</span>
+              <span className="tech-tag">Vite</span>
+              <span className="tech-tag">Leaflet</span>
+              <span className="tech-tag">Lucide Icons</span>
+              <span className="tech-tag">Flask</span>
+              <span className="tech-tag">OSRM</span>
+              <span className="tech-tag">Overpass API</span>
+              <span className="tech-tag">Nominatim</span>
+              <span className="tech-tag">OpenStreetMap</span>
+              <span className="tech-tag">Claude Haiku</span>
             </div>
-          </SettingsSection>
+          </section>
         </div>
       </div>
     </div>
@@ -619,6 +627,9 @@ export default function App() {
   const [end, setEnd] = useState(null);
   const [standard, setStandard] = useState(null);
   const [safewalk, setSafewalk] = useState(null);
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    return !localStorage.getItem("safewalk_onboarded");
+  });
   const [sameRoute, setSameRoute] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -926,634 +937,597 @@ export default function App() {
     setPendingReport(latlng);
   };
 
+  const completeOnboarding = () => {
+    setShowOnboarding(false);
+    localStorage.setItem("safewalk_onboarded", "true");
+  };
+
   return (
-    <div className="app-shell">
-      <aside className="side-panel">
-        <div className="brand">
-          <div className="brand-header">
-            <img
-              src={logo}
-              alt="SafeWalk"
-              className="brand-logo-img"
-              width="56"
-              height="56"
-            />
-            <h1 className="brand-wordmark">SafeWalk</h1>
-            <div className="brand-actions">
-              <button
-                type="button"
-                className="icon-btn"
-                onClick={() => setSettingsOpen(true)}
-                aria-label="Open settings"
-                title="Settings"
-              >
-                <SettingsIcon size={18} strokeWidth={2.25} />
-              </button>
+    <>
+      {showOnboarding && <Onboarding onComplete={completeOnboarding} />}
+      <div className="app-shell">
+        <aside className="side-panel">
+          <div className="brand">
+            <div className="brand-header">
+              <img
+                src={logo}
+                alt="SafeWalk"
+                className="brand-logo-img"
+                width="56"
+                height="56"
+              />
+              <h1 className="brand-wordmark">SafeWalk</h1>
+              <div className="brand-actions">
+                <button
+                  type="button"
+                  className="icon-btn"
+                  onClick={() => setSettingsOpen(true)}
+                  aria-label="Open settings"
+                  title="Settings"
+                >
+                  <SettingsIcon size={18} strokeWidth={2.25} />
+                </button>
+              </div>
             </div>
           </div>
-          <p className="brand-tagline">
-            Navigation that favors natural surveillance — lit streets, foot
-            traffic, and open businesses — so you can reclaim the night.
-          </p>
-          <div className="stat-line">
-            <strong>60%</strong> of people feel more anxious walking home after
-            9 PM. SafeWalk routes for presence, not just minutes.
-          </div>
-        </div>
 
-        <LocationAutocomplete
-          id="sw-start"
-          label="Start"
-          value={startQ}
-          onValueChange={setStartQ}
-          resolved={startResolved}
-          onResolved={setStartResolved}
-          hint="Type 3+ characters, wait for suggestions, then tap a row to pin. Requires the backend on port 5050."
-          apiBase={apiBase}
-        />
-        <LocationAutocomplete
-          id="sw-end"
-          label="Destination"
-          value={endQ}
-          onValueChange={setEndQ}
-          resolved={endResolved}
-          onResolved={setEndResolved}
-          apiBase={apiBase}
-        />
+          <LocationAutocomplete
+            id="sw-start"
+            label="Start"
+            value={startQ}
+            onValueChange={setStartQ}
+            resolved={startResolved}
+            onResolved={setStartResolved}
+            hint="Type 3+ characters, wait for suggestions, then tap a row to pin. Requires the backend on port 5050."
+            apiBase={apiBase}
+          />
+          <LocationAutocomplete
+            id="sw-end"
+            label="Destination"
+            value={endQ}
+            onValueChange={setEndQ}
+            resolved={endResolved}
+            onResolved={setEndResolved}
+            apiBase={apiBase}
+          />
 
-        <div className="actions">
-          <button
-            className="btn-primary"
-            type="button"
-            disabled={loading}
-            onClick={fetchRoutes}
-          >
-            {loading ? (
-              <>
-                <Loader2 size={16} strokeWidth={2.5} className="spin" />
-                Routing…
-              </>
-            ) : (
-              <>
-                <Navigation size={16} strokeWidth={2.5} />
-                Compare routes
-              </>
-            )}
-          </button>
-          <div className="actions-row">
+          <div className="actions">
             <button
-              className="btn-ghost"
+              className="btn-primary"
               type="button"
               disabled={loading}
-              onClick={runDemo}
+              onClick={fetchRoutes}
             >
               {loading ? (
                 <>
-                  <Loader2 size={14} strokeWidth={2.25} className="spin" />
-                  Loading…
+                  <Loader2 size={16} strokeWidth={2.5} className="spin" />
+                  Routing…
                 </>
               ) : (
                 <>
-                  <Zap size={14} strokeWidth={2.25} />
-                  Try Demo
+                  <Navigation size={16} strokeWidth={2.5} />
+                  Compare routes
                 </>
               )}
             </button>
-            <button
-              className="btn-ghost"
-              type="button"
-              onClick={voiceEscort}
-              disabled={narrateBusy || (!standard && !safewalk)}
-            >
-              {narrateBusy ? (
-                <>
-                  <Loader2 size={14} strokeWidth={2.25} className="spin" />
-                  Thinking…
-                </>
-              ) : (
-                <>
-                  <Sparkles size={14} strokeWidth={2.25} />
-                  Reasoning
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-
-        {error ? (
-          <p className="error">
-            <AlertTriangle size={16} strokeWidth={2.25} style={{ flexShrink: 0, marginTop: 2 }} />
-            <span>{error}</span>
-          </p>
-        ) : null}
-        {safewalk?.geometry?.length && !error ? (
-          <p className="geo-hint maps-auto-hint">
-            Green line = SafeWalk route · Red line = fastest route. Tap{" "}
-            <strong>Walk here</strong> to start GPS navigation or{" "}
-            <strong>Google Maps</strong> to open in browser.
-          </p>
-        ) : null}
-
-        <div className="route-cards">
-          <p className="route-cards-heading">Routes</p>
-          {sameRoute ? (
-            <div className="same-route-banner">
-              <CheckCircle2 size={16} strokeWidth={2.5} />
-              Only one route exists here — this is already the safest path available.
+            <div className="actions-row">
+              <button
+                className="btn-ghost"
+                type="button"
+                disabled={loading}
+                onClick={runDemo}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 size={14} strokeWidth={2.25} className="spin" />
+                    Loading…
+                  </>
+                ) : (
+                  <>
+                    <Zap size={14} strokeWidth={2.25} />
+                    Try Demo
+                  </>
+                )}
+              </button>
+              <button
+                className="btn-ghost"
+                type="button"
+                onClick={voiceEscort}
+                disabled={narrateBusy || (!standard && !safewalk)}
+              >
+                {narrateBusy ? (
+                  <>
+                    <Loader2 size={14} strokeWidth={2.25} className="spin" />
+                    Thinking…
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={14} strokeWidth={2.25} />
+                    Reasoning
+                  </>
+                )}
+              </button>
             </div>
-          ) : null}
-
-
-          {loading && !standard && !safewalk ? (
-            <>
-              <div className="route-card-skeleton">
-                <div className="skel-header-row">
-                  <div className="skel-header-text">
-                    <div className="skeleton skel-title" />
-                    <div className="skeleton skel-subtitle" />
-                  </div>
-                  <div className="skeleton skel-ring" />
-                </div>
-                <div className="skel-stats-row">
-                  <div className="skeleton skel-stat" />
-                  <div className="skeleton skel-stat" />
-                  <div className="skeleton skel-stat" />
-                </div>
-              </div>
-              <div className="route-card-skeleton">
-                <div className="skel-header-row">
-                  <div className="skel-header-text">
-                    <div className="skeleton skel-title" />
-                    <div className="skeleton skel-subtitle" />
-                  </div>
-                  <div className="skeleton skel-ring" />
-                </div>
-                <div className="skel-stats-row">
-                  <div className="skeleton skel-stat" />
-                  <div className="skeleton skel-stat" />
-                  <div className="skeleton skel-stat" />
-                </div>
-              </div>
-            </>
-          ) : standard || safewalk ? (
-            <>
-              <div className={`route-card fast${walkMode === "standard" ? " route-card-walking" : ""}`}>
-                <div className="route-card-top">
-                  <div>
-                    <div className="route-card-title-row">
-                      <h3>Fastest Route</h3>
-                      {standard?.safety?.tier ? (
-                        <span className={tierPill(standard.safety.tier)}>
-                          {standard.safety.tier}
-                        </span>
-                      ) : null}
-                    </div>
-                    <p className="route-card-subtitle">Optimized for speed</p>
-                  </div>
-                  <ScoreRing
-                    score={standard?.safety?.score}
-                    tier={standard?.safety?.tier}
-                    description={scoreDescription(standard?.safety?.score)}
-                  />
-                </div>
-                <div className="route-stats-grid">
-                  <div className="route-stat">
-                    <span className="route-stat-value">
-                      <DurationLine durationMin={standard?.duration_min} />
-                    </span>
-                    <span className="route-stat-label"><Clock size={10} strokeWidth={2.5} />Time</span>
-                  </div>
-                  <div className="route-stat">
-                    <span className="route-stat-value">{standard ? `${standard.distance_km} km` : "—"}</span>
-                    <span className="route-stat-label"><Ruler size={10} strokeWidth={2.5} />Distance</span>
-                  </div>
-                  <div className="route-stat">
-                    <span className="route-stat-value">{standard?.safety?.active_business_proximity_hits ?? "—"}</span>
-                    <span className="route-stat-label"><Building2 size={10} strokeWidth={2.5} />Businesses</span>
-                  </div>
-                </div>
-                <div className="route-card-actions">
-                  <button
-                    className="btn-walk"
-                    type="button"
-                    disabled={!standard?.steps?.length}
-                    onClick={() => { setWalkMode("standard"); setFollowUser(true); setReportMode(false); }}
-                  >
-                    <Footprints size={14} strokeWidth={2.25} />
-                    Walk here
-                  </button>
-                  <button
-                    className="btn-google-maps"
-                    type="button"
-                    disabled={!standard?.geometry?.length}
-                    onClick={() => openRouteInGoogleMaps(standard)}
-                  >
-                    <ExternalLink size={14} strokeWidth={2.25} />
-                    Google Maps
-                  </button>
-                </div>
-                {standard?.steps?.length ? (
-                  <details className="turn-list">
-                    <summary>
-                      <ChevronDown size={14} className="chevron" strokeWidth={2.5} />
-                      {standard.steps.length} turn-by-turn steps
-                    </summary>
-                    <ol>
-                      {standard.steps.map((st, i) => <li key={`s-${i}`}>{st.instruction}</li>)}
-                    </ol>
-                  </details>
-                ) : null}
-              </div>
-
-              <div className={`route-card safe${walkMode === "safewalk" ? " route-card-walking" : ""}`}>
-                <div className="route-card-top">
-                  <div>
-                    <div className="route-card-title-row">
-                      <h3>SafeWalk Route</h3>
-                      {safewalk?.safety?.tier ? (
-                        <span className={tierPill(safewalk.safety.tier)}>
-                          {safewalk.safety.tier}
-                        </span>
-                      ) : null}
-                    </div>
-                    <p className="route-card-subtitle">Optimized for safety</p>
-                  </div>
-                  <ScoreRing
-                    score={safewalk?.safety?.score}
-                    tier={safewalk?.safety?.tier}
-                    description={scoreDescription(safewalk?.safety?.score, true)}
-                  />
-                </div>
-                <div className="route-stats-grid">
-                  <div className="route-stat">
-                    <span className="route-stat-value">
-                      <DurationLine durationMin={safewalk?.duration_min} />
-                    </span>
-                    <span className="route-stat-label"><Clock size={10} strokeWidth={2.5} />Time</span>
-                  </div>
-                  <div className="route-stat">
-                    <span className="route-stat-value">{safewalk ? `${safewalk.distance_km} km` : "—"}</span>
-                    <span className="route-stat-label"><Ruler size={10} strokeWidth={2.5} />Distance</span>
-                  </div>
-                  <div className="route-stat">
-                    <span className="route-stat-value">{safewalk?.safety?.active_business_proximity_hits ?? "—"}</span>
-                    <span className="route-stat-label"><Building2 size={10} strokeWidth={2.5} />Businesses</span>
-                  </div>
-                </div>
-                <div className="route-card-actions">
-                  <button
-                    className="btn-walk"
-                    type="button"
-                    disabled={!safewalk?.steps?.length}
-                    onClick={() => { setWalkMode("safewalk"); setFollowUser(true); setReportMode(false); }}
-                  >
-                    <Footprints size={14} strokeWidth={2.25} />
-                    Walk here
-                  </button>
-                  <button
-                    className="btn-google-maps"
-                    type="button"
-                    disabled={!safewalk?.geometry?.length}
-                    onClick={() => openRouteInGoogleMaps(safewalk)}
-                  >
-                    <ExternalLink size={14} strokeWidth={2.25} />
-                    Google Maps
-                  </button>
-                </div>
-                {safewalk?.steps?.length ? (
-                  <details className="turn-list">
-                    <summary>
-                      <ChevronDown size={14} className="chevron" strokeWidth={2.5} />
-                      {safewalk.steps.length} turn-by-turn steps
-                    </summary>
-                    <ol>
-                      {safewalk.steps.map((st, i) => <li key={`w-${i}`}>{st.instruction}</li>)}
-                    </ol>
-                  </details>
-                ) : null}
-              </div>
-            </>
-          ) : null}
-        </div>
-
-        {narration ? (
-          <div className="narration">
-            <header className="narration-header">
-              <Sparkles size={14} strokeWidth={2.5} />
-              AI Safety Summary
-            </header>
-            {narration}
           </div>
-        ) : null}
 
-        <div className="report-section">
-          <div className="actions-row">
-            <button
-              className={reportMode ? "btn-primary" : "btn-ghost"}
-              type="button"
-              onClick={() => {
-                setReportMode((v) => !v);
-                setPendingReport(null);
-              }}
-            >
-              {reportMode ? (
-                <>
-                  <XCircle size={14} strokeWidth={2.25} />
-                  Cancel pin drop
-                </>
-              ) : (
-                <>
-                  <MapPin size={14} strokeWidth={2.25} />
-                  Report on map
-                </>
-              )}
-            </button>
-          </div>
-          {reportMode ? (
-            <p className="geo-hint">
-              Tap the map where the issue is. Reports affect safety scores for everyone.
+          {error ? (
+            <p className="error">
+              <AlertTriangle size={16} strokeWidth={2.25} style={{ flexShrink: 0, marginTop: 2 }} />
+              <span>{error}</span>
             </p>
           ) : null}
-          {pendingReport ? (
-            <div className="report-form">
-              <p className="report-form-label">What are you reporting?</p>
-              <select
-                value={reportKind}
-                onChange={(e) => setReportKind(e.target.value)}
+          {safewalk?.geometry?.length && !error ? (
+            <p className="geo-hint maps-auto-hint">
+              Green line = SafeWalk route · Red line = fastest route. Tap{" "}
+              <strong>Walk here</strong> to start GPS navigation or{" "}
+              <strong>Google Maps</strong> to open in browser.
+            </p>
+          ) : null}
+
+          <div className="route-cards">
+            <p className="route-cards-heading">Routes</p>
+            {sameRoute ? (
+              <div className="same-route-banner">
+                <CheckCircle2 size={16} strokeWidth={2.5} />
+                Only one route exists here — this is already the safest path available.
+              </div>
+            ) : null}
+
+            {loading && !standard && !safewalk ? (
+              <>
+                <div className="route-card-skeleton">
+                  <div className="skel-header-row">
+                    <div className="skel-header-text">
+                      <div className="skeleton skel-title" />
+                      <div className="skeleton skel-subtitle" />
+                    </div>
+                    <div className="skeleton skel-ring" />
+                  </div>
+                  <div className="skel-stats-row">
+                    <div className="skeleton skel-stat" />
+                    <div className="skeleton skel-stat" />
+                    <div className="skeleton skel-stat" />
+                  </div>
+                </div>
+              </>
+            ) : standard || safewalk ? (
+              <>
+                <div className={`route-card fast${walkMode === "standard" ? " route-card-walking" : ""}`}>
+                  <div className="route-card-top">
+                    <div>
+                      <div className="route-card-title-row">
+                        <h3>Fastest Route</h3>
+                        {standard?.safety?.tier ? (
+                          <span className={tierPill(standard.safety.tier)}>
+                            {standard.safety.tier}
+                          </span>
+                        ) : null}
+                      </div>
+                      <p className="route-card-subtitle">Optimized for speed</p>
+                    </div>
+                    <ScoreRing
+                      score={standard?.safety?.score}
+                      tier={standard?.safety?.tier}
+                      description={scoreDescription(standard?.safety?.score)}
+                    />
+                  </div>
+                  <div className="route-stats-grid">
+                    <div className="route-stat">
+                      <span className="route-stat-value">
+                        <DurationLine durationMin={standard?.duration_min} />
+                      </span>
+                      <span className="route-stat-label"><Clock size={10} strokeWidth={2.5} />Time</span>
+                    </div>
+                    <div className="route-stat">
+                      <span className="route-stat-value">{standard ? `${standard.distance_km} km` : "—"}</span>
+                      <span className="route-stat-label"><Ruler size={10} strokeWidth={2.5} />Distance</span>
+                    </div>
+                    <div className="route-stat">
+                      <span className="route-stat-value">{standard?.safety?.active_business_proximity_hits ?? "—"}</span>
+                      <span className="route-stat-label"><Building2 size={10} strokeWidth={2.5} />Businesses</span>
+                    </div>
+                  </div>
+                  <div className="route-card-actions">
+                    <button
+                      className="btn-walk"
+                      type="button"
+                      disabled={!standard?.steps?.length}
+                      onClick={() => { setWalkMode("standard"); setFollowUser(true); setReportMode(false); }}
+                    >
+                      <Footprints size={14} strokeWidth={2.25} />
+                      Walk here
+                    </button>
+                    <button
+                      className="btn-google-maps"
+                      type="button"
+                      disabled={!standard?.geometry?.length}
+                      onClick={() => openRouteInGoogleMaps(standard)}
+                    >
+                      <ExternalLink size={14} strokeWidth={2.25} />
+                      Google Maps
+                    </button>
+                  </div>
+                </div>
+
+                <div className={`route-card safe${walkMode === "safewalk" ? " route-card-walking" : ""}`}>
+                  <div className="route-card-top">
+                    <div>
+                      <div className="route-card-title-row">
+                        <h3>SafeWalk Route</h3>
+                        {safewalk?.safety?.tier ? (
+                          <span className={tierPill(safewalk.safety.tier)}>
+                            {safewalk.safety.tier}
+                          </span>
+                        ) : null}
+                      </div>
+                      <p className="route-card-subtitle">Optimized for safety</p>
+                    </div>
+                    <ScoreRing
+                      score={safewalk?.safety?.score}
+                      tier={safewalk?.safety?.tier}
+                      description={scoreDescription(safewalk?.safety?.score, true)}
+                    />
+                  </div>
+                  <div className="route-stats-grid">
+                    <div className="route-stat">
+                      <span className="route-stat-value">
+                        <DurationLine durationMin={safewalk?.duration_min} />
+                      </span>
+                      <span className="route-stat-label"><Clock size={10} strokeWidth={2.5} />Time</span>
+                    </div>
+                    <div className="route-stat">
+                      <span className="route-stat-value">{safewalk ? `${safewalk.distance_km} km` : "—"}</span>
+                      <span className="route-stat-label"><Ruler size={10} strokeWidth={2.5} />Distance</span>
+                    </div>
+                    <div className="route-stat">
+                      <span className="route-stat-value">{safewalk?.safety?.active_business_proximity_hits ?? "—"}</span>
+                      <span className="route-stat-label"><Building2 size={10} strokeWidth={2.5} />Businesses</span>
+                    </div>
+                  </div>
+                  <div className="route-card-actions">
+                    <button
+                      className="btn-walk"
+                      type="button"
+                      disabled={!safewalk?.steps?.length}
+                      onClick={() => { setWalkMode("safewalk"); setFollowUser(true); setReportMode(false); }}
+                    >
+                      <Footprints size={14} strokeWidth={2.25} />
+                      Walk here
+                    </button>
+                    <button
+                      className="btn-google-maps"
+                      type="button"
+                      disabled={!safewalk?.geometry?.length}
+                      onClick={() => openRouteInGoogleMaps(safewalk)}
+                    >
+                      <ExternalLink size={14} strokeWidth={2.25} />
+                      Google Maps
+                    </button>
+                  </div>
+                </div>
+              </>
+            ) : null}
+          </div>
+
+          {narration ? (
+            <div className="narration">
+              <header className="narration-header">
+                <Sparkles size={14} strokeWidth={2.5} />
+                AI Safety Summary
+              </header>
+              {narration}
+            </div>
+          ) : null}
+
+          <div className="report-section">
+            <div className="actions-row">
+              <button
+                className={reportMode ? "btn-primary" : "btn-ghost"}
+                type="button"
+                onClick={() => {
+                  setReportMode((v) => !v);
+                  setPendingReport(null);
+                }}
               >
-                <option value="streetlight">Streetlight out</option>
-                <option value="construction">Blocked sidewalk</option>
-                <option value="harassment">Safety concern</option>
-                <option value="other">Other</option>
-              </select>
-              <textarea
-                value={reportMsg}
-                onChange={(e) => setReportMsg(e.target.value)}
-                placeholder="Short note (optional)"
+                {reportMode ? (
+                  <>
+                    <XCircle size={14} strokeWidth={2.25} />
+                    Cancel pin drop
+                  </>
+                ) : (
+                  <>
+                    <MapPin size={14} strokeWidth={2.25} />
+                    Report on map
+                  </>
+                )}
+              </button>
+            </div>
+            {reportMode ? (
+              <p className="geo-hint">
+                Tap the map where the issue is. Reports affect safety scores for everyone.
+              </p>
+            ) : null}
+            {pendingReport ? (
+              <div className="report-form">
+                <p className="report-form-label">What are you reporting?</p>
+                <select
+                  value={reportKind}
+                  onChange={(e) => setReportKind(e.target.value)}
+                >
+                  <option value="streetlight">Streetlight out</option>
+                  <option value="construction">Blocked sidewalk</option>
+                  <option value="harassment">Safety concern</option>
+                  <option value="other">Other</option>
+                </select>
+                <textarea
+                  value={reportMsg}
+                  onChange={(e) => setReportMsg(e.target.value)}
+                  placeholder="Short note (optional)"
+                />
+                <div className="actions-row">
+                  <button className="btn-primary" type="button" onClick={submitReport}>
+                    <Send size={14} strokeWidth={2.25} />
+                    Submit report
+                  </button>
+                  <button
+                    className="btn-ghost"
+                    type="button"
+                    onClick={() => setPendingReport(null)}
+                  >
+                    Discard
+                  </button>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </aside>
+
+        <div className="map-wrap">
+          <MapContainer
+            center={DEFAULT_CENTER}
+            zoom={13}
+            scrollWheelZoom
+          >
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            <FitBounds lines={linesForFit} enabled={!walkMode} />
+            <FollowUser
+              position={
+                userPos
+                  ? { lat: userPos.lat, lng: userPos.lng }
+                  : null
+              }
+              enabled={Boolean(walkMode && followUser && userPos)}
+              zoom={17}
+            />
+            <MapClickHandler enabled={reportMode} onPick={onMapPick} />
+
+            {start ? (
+              <Marker position={[start.lat, start.lon]}>
+                <Popup>Start</Popup>
+              </Marker>
+            ) : null}
+            {end ? (
+              <Marker position={[end.lat, end.lon]}>
+                <Popup>End</Popup>
+              </Marker>
+            ) : null}
+
+            {standard?.geometry?.length ? (
+              <Polyline
+                positions={standard.geometry.map(([lon, lat]) => [lat, lon])}
+                pathOptions={
+                  walkMode === "safewalk"
+                    ? { color: MAP_COLORS.standard, weight: 5, opacity: 0.22 }
+                    : { color: MAP_COLORS.standard, weight: 7, opacity: 0.95 }
+                }
               />
-              <div className="actions-row">
-                <button className="btn-primary" type="button" onClick={submitReport}>
-                  <Send size={14} strokeWidth={2.25} />
-                  Submit report
+            ) : null}
+            {safewalk?.geometry?.length ? (
+              <Polyline
+                positions={safewalk.geometry.map(([lon, lat]) => [lat, lon])}
+                pathOptions={
+                  walkMode === "standard"
+                    ? { color: MAP_COLORS.safewalk, weight: 5, opacity: 0.22 }
+                    : { color: MAP_COLORS.safewalk, weight: 7, opacity: 0.95 }
+                }
+              />
+            ) : null}
+
+            {walkMode && userPos ? (
+              <>
+                <Circle
+                  center={[userPos.lat, userPos.lng]}
+                  radius={Math.min(Math.max(userPos.accuracy || 25, 12), 120)}
+                  pathOptions={{
+                    color: MAP_COLORS.userRing,
+                    fillColor: MAP_COLORS.userRing,
+                    fillOpacity: 0.12,
+                    weight: 1,
+                  }}
+                />
+                <CircleMarker
+                  center={[userPos.lat, userPos.lng]}
+                  radius={7}
+                  pathOptions={{
+                    color: MAP_COLORS.userDot,
+                    fillColor: MAP_COLORS.userRing,
+                    fillOpacity: 1,
+                    weight: 3,
+                  }}
+                >
+                  <Popup>You are here</Popup>
+                </CircleMarker>
+              </>
+            ) : null}
+
+            {reports.map((rep) => (
+              <CircleMarker
+                key={rep.id}
+                center={[rep.lat, rep.lon]}
+                radius={9}
+                pathOptions={{
+                  color: MAP_COLORS.reportStroke,
+                  fillColor: MAP_COLORS.reportFill,
+                  fillOpacity: 0.85,
+                  weight: 2,
+                }}
+              >
+                <Popup>
+                  <strong>{rep.kind}</strong>
+                  <div>{rep.message || "No details"}</div>
+                </Popup>
+              </CircleMarker>
+            ))}
+
+            {pendingReport ? (
+              <CircleMarker
+                center={[pendingReport.lat, pendingReport.lng]}
+                radius={11}
+                pathOptions={{
+                  color: MAP_COLORS.pendingMark,
+                  fillColor: MAP_COLORS.pendingMark,
+                  fillOpacity: 0.35,
+                  weight: 3,
+                }}
+              />
+            ) : null}
+          </MapContainer>
+
+          {walkMode ? (
+            <div className="walk-hud" aria-live="polite">
+              <div className="walk-hud-header">
+                <div className="walk-hud-route-info">
+                  <div className="walk-hud-route-icon">
+                    <Navigation size={18} strokeWidth={2.5} />
+                  </div>
+                  <div className="walk-hud-route-label">
+                    <strong>
+                      {walkMode === "safewalk" ? "SafeWalk Route" : "Fastest Route"}
+                    </strong>
+                    <span className="walk-hud-sub">Live navigation</span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="btn-hud-stop"
+                  onClick={() => {
+                    setWalkMode(null);
+                    if (window.speechSynthesis) {
+                      window.speechSynthesis.cancel();
+                    }
+                  }}
+                >
+                  <XCircle size={14} strokeWidth={2.5} />
+                  End
+                </button>
+              </div>
+              {geoError ? (
+                <p className="error walk-hud-msg">
+                  <AlertTriangle size={14} strokeWidth={2.25} style={{ flexShrink: 0 }} />
+                  <span>{geoError}</span>
+                </p>
+              ) : null}
+              {!userPos && !geoError ? (
+                <p className="geo-hint walk-hud-msg">Acquiring GPS…</p>
+              ) : null}
+              {walkDerived.snapshot ? (
+                <>
+                  <div className="walk-hud-next-block">
+                    <p className="walk-next-label">Next</p>
+                    <p className="walk-next-text">
+                      {walkDerived.snapshot.nextInstruction}
+                    </p>
+                    <div className="walk-stats">
+                      <span>
+                        <strong>~{Math.round(walkDerived.snapshot.remainingStepM)} m</strong> to maneuver
+                      </span>
+                      <span className="walk-dot">·</span>
+                      <span>
+                        ETA <strong>~{Math.max(1, Math.round(walkDerived.snapshot.etaMin))} min</strong>
+                      </span>
+                      <span className="walk-dot">·</span>
+                      <span>
+                        <strong>{Math.round(walkDerived.snapshot.remainingM)} m</strong> left
+                      </span>
+                    </div>
+                  </div>
+                  <div className="walk-progress-track">
+                    <div
+                      className="walk-progress-fill"
+                      style={{
+                        width: `${Math.min(100, walkDerived.snapshot.progressPct)}%`,
+                      }}
+                    />
+                  </div>
+                  {Number.isFinite(walkDerived.crossTrackM) &&
+                  walkDerived.crossTrackM > 48 ? (
+                    <p className="walk-off-route">
+                      <AlertTriangle size={14} strokeWidth={2.5} />
+                      Step back toward the line (~{Math.round(walkDerived.crossTrackM)} m off route)
+                    </p>
+                  ) : null}
+                  {walkDerived.snapshot.atDestination ? (
+                    <p className="walk-arrived">
+                      <CheckCircle2 size={14} strokeWidth={2.5} />
+                      You've reached the destination area.
+                    </p>
+                  ) : null}
+                </>
+              ) : null}
+              <div className="walk-hud-actions">
+                <button
+                  type="button"
+                  className={followUser ? "btn-primary" : "btn-ghost"}
+                  onClick={() => setFollowUser((v) => !v)}
+                >
+                  {followUser ? (
+                    <><Crosshair size={13} strokeWidth={2.5} /> Following</>
+                  ) : (
+                    <><MapIcon size={13} strokeWidth={2.5} /> Free map</>
+                  )}
                 </button>
                 <button
-                  className="btn-ghost"
                   type="button"
-                  onClick={() => setPendingReport(null)}
+                  className={voiceGuidance ? "btn-primary" : "btn-ghost"}
+                  onClick={() => setVoiceGuidance((v) => !v)}
                 >
-                  Discard
+                  {voiceGuidance ? (
+                    <><Volume2 size={13} strokeWidth={2.5} /> Voice on</>
+                  ) : (
+                    <><VolumeX size={13} strokeWidth={2.5} /> Voice off</>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  className="btn-ghost"
+                  onClick={() => setFollowUser(true)}
+                >
+                  <LocateFixed size={13} strokeWidth={2.5} />
+                  Recenter
+                </button>
+                <button
+                  type="button"
+                  className="btn-ghost"
+                  onClick={() => openRouteInGoogleMaps(activeWalkRoute)}
+                >
+                  <ExternalLink size={13} strokeWidth={2.5} />
+                  Maps
                 </button>
               </div>
             </div>
           ) : null}
         </div>
-      </aside>
 
-      <div className="map-wrap">
-        <MapContainer
-          center={DEFAULT_CENTER}
-          zoom={13}
-          scrollWheelZoom
-        >
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          <FitBounds lines={linesForFit} enabled={!walkMode} />
-          <FollowUser
-            position={
-              userPos
-                ? { lat: userPos.lat, lng: userPos.lng }
-                : null
-            }
-            enabled={Boolean(walkMode && followUser && userPos)}
-            zoom={17}
-          />
-          <MapClickHandler enabled={reportMode} onPick={onMapPick} />
-
-          {start ? (
-            <Marker position={[start.lat, start.lon]}>
-              <Popup>Start</Popup>
-            </Marker>
-          ) : null}
-          {end ? (
-            <Marker position={[end.lat, end.lon]}>
-              <Popup>End</Popup>
-            </Marker>
-          ) : null}
-
-          {standard?.geometry?.length ? (
-            <Polyline
-              positions={standard.geometry.map(([lon, lat]) => [lat, lon])}
-              pathOptions={
-                walkMode === "safewalk"
-                  ? { color: MAP_COLORS.standard, weight: 5, opacity: 0.22 }
-                  : { color: MAP_COLORS.standard, weight: 7, opacity: 0.95 }
-              }
-            />
-          ) : null}
-          {safewalk?.geometry?.length ? (
-            <Polyline
-              positions={safewalk.geometry.map(([lon, lat]) => [lat, lon])}
-              pathOptions={
-                walkMode === "standard"
-                  ? { color: MAP_COLORS.safewalk, weight: 5, opacity: 0.22 }
-                  : { color: MAP_COLORS.safewalk, weight: 7, opacity: 0.95 }
-              }
-            />
-          ) : null}
-
-          {walkMode && userPos ? (
-            <>
-              <Circle
-                center={[userPos.lat, userPos.lng]}
-                radius={Math.min(Math.max(userPos.accuracy || 25, 12), 120)}
-                pathOptions={{
-                  color: MAP_COLORS.userRing,
-                  fillColor: MAP_COLORS.userRing,
-                  fillOpacity: 0.12,
-                  weight: 1,
-                }}
-              />
-              <CircleMarker
-                center={[userPos.lat, userPos.lng]}
-                radius={7}
-                pathOptions={{
-                  color: MAP_COLORS.userDot,
-                  fillColor: MAP_COLORS.userRing,
-                  fillOpacity: 1,
-                  weight: 3,
-                }}
-              >
-                <Popup>You are here</Popup>
-              </CircleMarker>
-            </>
-          ) : null}
-
-          {reports.map((rep) => (
-            <CircleMarker
-              key={rep.id}
-              center={[rep.lat, rep.lon]}
-              radius={9}
-              pathOptions={{
-                color: MAP_COLORS.reportStroke,
-                fillColor: MAP_COLORS.reportFill,
-                fillOpacity: 0.85,
-                weight: 2,
-              }}
-            >
-              <Popup>
-                <strong>{rep.kind}</strong>
-                <div>{rep.message || "No details"}</div>
-              </Popup>
-            </CircleMarker>
-          ))}
-
-          {pendingReport ? (
-            <CircleMarker
-              center={[pendingReport.lat, pendingReport.lng]}
-              radius={11}
-              pathOptions={{
-                color: MAP_COLORS.pendingMark,
-                fillColor: MAP_COLORS.pendingMark,
-                fillOpacity: 0.35,
-                weight: 3,
-              }}
-            />
-          ) : null}
-        </MapContainer>
-
-        {walkMode ? (
-          <div className="walk-hud" aria-live="polite">
-            <div className="walk-hud-header">
-              <div className="walk-hud-route-info">
-                <div className="walk-hud-route-icon">
-                  <Navigation size={18} strokeWidth={2.5} />
-                </div>
-                <div className="walk-hud-route-label">
-                  <strong>
-                    {walkMode === "safewalk" ? "SafeWalk Route" : "Fastest Route"}
-                  </strong>
-                  <span className="walk-hud-sub">Live navigation</span>
-                </div>
-              </div>
-              <button
-                type="button"
-                className="btn-hud-stop"
-                onClick={() => {
-                  setWalkMode(null);
-                  if (window.speechSynthesis) {
-                    window.speechSynthesis.cancel();
-                  }
-                }}
-              >
-                <XCircle size={14} strokeWidth={2.5} />
-                End
-              </button>
-            </div>
-            {geoError ? (
-              <p className="error walk-hud-msg">
-                <AlertTriangle size={14} strokeWidth={2.25} style={{ flexShrink: 0 }} />
-                <span>{geoError}</span>
-              </p>
-            ) : null}
-            {!userPos && !geoError ? (
-              <p className="geo-hint walk-hud-msg">Acquiring GPS…</p>
-            ) : null}
-            {walkDerived.snapshot ? (
-              <>
-                <div className="walk-hud-next-block">
-                  <p className="walk-next-label">Next</p>
-                  <p className="walk-next-text">
-                    {walkDerived.snapshot.nextInstruction}
-                  </p>
-                  <div className="walk-stats">
-                    <span>
-                      <strong>~{Math.round(walkDerived.snapshot.remainingStepM)} m</strong> to maneuver
-                    </span>
-                    <span className="walk-dot">·</span>
-                    <span>
-                      ETA <strong>~{Math.max(1, Math.round(walkDerived.snapshot.etaMin))} min</strong>
-                    </span>
-                    <span className="walk-dot">·</span>
-                    <span>
-                      <strong>{Math.round(walkDerived.snapshot.remainingM)} m</strong> left
-                    </span>
-                  </div>
-                </div>
-                <div className="walk-progress-track">
-                  <div
-                    className="walk-progress-fill"
-                    style={{
-                      width: `${Math.min(100, walkDerived.snapshot.progressPct)}%`,
-                    }}
-                  />
-                </div>
-                {Number.isFinite(walkDerived.crossTrackM) &&
-                walkDerived.crossTrackM > 48 ? (
-                  <p className="walk-off-route">
-                    <AlertTriangle size={14} strokeWidth={2.5} />
-                    Step back toward the line (~{Math.round(walkDerived.crossTrackM)} m off route)
-                  </p>
-                ) : null}
-                {walkDerived.snapshot.atDestination ? (
-                  <p className="walk-arrived">
-                    <CheckCircle2 size={14} strokeWidth={2.5} />
-                    You've reached the destination area.
-                  </p>
-                ) : null}
-              </>
-            ) : null}
-            <div className="walk-hud-actions">
-              <button
-                type="button"
-                className={followUser ? "btn-primary" : "btn-ghost"}
-                onClick={() => setFollowUser((v) => !v)}
-              >
-                {followUser ? (
-                  <><Crosshair size={13} strokeWidth={2.5} /> Following</>
-                ) : (
-                  <><MapIcon size={13} strokeWidth={2.5} /> Free map</>
-                )}
-              </button>
-              <button
-                type="button"
-                className={voiceGuidance ? "btn-primary" : "btn-ghost"}
-                onClick={() => setVoiceGuidance((v) => !v)}
-              >
-                {voiceGuidance ? (
-                  <><Volume2 size={13} strokeWidth={2.5} /> Voice on</>
-                ) : (
-                  <><VolumeX size={13} strokeWidth={2.5} /> Voice off</>
-                )}
-              </button>
-              <button
-                type="button"
-                className="btn-ghost"
-                onClick={() => setFollowUser(true)}
-              >
-                <LocateFixed size={13} strokeWidth={2.5} />
-                Recenter
-              </button>
-              <button
-                type="button"
-                className="btn-ghost"
-                onClick={() => openRouteInGoogleMaps(activeWalkRoute)}
-              >
-                <ExternalLink size={13} strokeWidth={2.5} />
-                Maps
-              </button>
-            </div>
-          </div>
-        ) : null}
+        <SettingsModal
+          open={settingsOpen}
+          onClose={() => setSettingsOpen(false)}
+          theme={theme}
+          onThemeChange={setTheme}
+        />
       </div>
-
-      <SettingsModal
-        open={settingsOpen}
-        onClose={() => setSettingsOpen(false)}
-        theme={theme}
-        onThemeChange={setTheme}
-      />
-    </div>
+    </>
   );
 }
