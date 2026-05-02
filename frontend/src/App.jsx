@@ -24,6 +24,27 @@ import {
   enrichStepsWithCumulative,
   projectAlongPolyline,
 } from "./walkUtils.js";
+import {
+  Shield,
+  CheckCircle2,
+  Sparkles,
+  MapPin,
+  Navigation,
+  Volume2,
+  VolumeX,
+  Crosshair,
+  Map as MapIcon,
+  XCircle,
+  ChevronDown,
+  LocateFixed,
+  ExternalLink,
+  AlertTriangle,
+  Zap,
+  Footprints,
+  Building2,
+  Clock,
+  Send,
+} from "lucide-react";
 
 // Fix default marker icons in bundlers (Vite)
 delete L.Icon.Default.prototype._getIconUrl;
@@ -37,6 +58,16 @@ L.Icon.Default.mergeOptions({
 });
 
 const DEFAULT_CENTER = [43.6532, -79.3832];
+
+const MAP_COLORS = {
+  standard: "#ff5c6c",
+  safewalk: "#38d39f",
+  userRing: "#6eb7ff",
+  userDot: "#1e5eff",
+  reportFill: "#ffdc73",
+  reportStroke: "#f0b429",
+  pendingMark: "#3ee6b0",
+};
 
 /** Avoids "Unexpected end of JSON input" when the proxy/API returns an empty body (backend off). */
 async function readJsonResponse(response) {
@@ -117,6 +148,53 @@ function tierPill(tier) {
   if (tier === "green") return "pill green";
   if (tier === "amber") return "pill amber";
   return "pill red";
+}
+
+function tierColor(tier) {
+  if (tier === "green") return "var(--safe)";
+  if (tier === "amber") return "var(--warn)";
+  return "var(--danger)";
+}
+
+function tierNumColor(tier) {
+  if (tier === "green") return "#8cf5d1";
+  if (tier === "amber") return "#ffd875";
+  return "#ff8f99";
+}
+
+function ScoreRing({ score, tier, description }) {
+  const C = 138.23;
+  const fill = score != null ? (score / 100) * C : 0;
+  const stroke = tierColor(tier);
+  const numColor = tierNumColor(tier);
+  return (
+    <div className="score-ring-wrap">
+      <svg width="60" height="60" viewBox="0 0 60 60" aria-hidden="true">
+        <circle
+          cx="30" cy="30" r="22"
+          fill="none"
+          stroke="var(--border)"
+          strokeWidth="4"
+        />
+        <circle
+          cx="30" cy="30" r="22"
+          fill="none"
+          stroke={stroke}
+          strokeWidth="4"
+          strokeLinecap="round"
+          strokeDasharray={`${fill} ${C}`}
+          transform="rotate(-90 30 30)"
+          style={{ transition: "stroke-dasharray 0.6s ease, stroke 0.3s ease", color: stroke }}
+        />
+      </svg>
+      <span className="score-ring-num" style={{ color: numColor }}>
+        {score != null ? score : "—"}
+      </span>
+      {description ? (
+        <div className="score-ring-tooltip">{description}</div>
+      ) : null}
+    </div>
+  );
 }
 
 function scoreDescription(score, isSafewalk = false) {
@@ -360,7 +438,8 @@ function LocationAutocomplete({
       </div>
       {hint ? <span className="geo-hint">{hint}</span> : null}
       {resolved ? (
-        <span className="geo-hint" style={{ color: "var(--accent)" }}>
+        <span className="geo-hint geo-hint--accent">
+          <CheckCircle2 size={14} strokeWidth={2.5} />
           Location pinned — Compare routes will use this place.
         </span>
       ) : null}
@@ -674,8 +753,10 @@ export default function App() {
       <aside className="side-panel">
         <div className="brand">
           <div className="brand-header">
-            <span className="brand-icon">🛡️</span>
-            <h1>SafeWalk</h1>
+            <div className="brand-logo">
+              <Shield size={26} strokeWidth={2.5} className="brand-shield-icon" />
+            </div>
+            <h1 className="brand-wordmark">SafeWalk</h1>
           </div>
           <p className="brand-tagline">
             Navigation that favors natural surveillance — lit streets, foot
@@ -714,7 +795,14 @@ export default function App() {
             disabled={loading}
             onClick={fetchRoutes}
           >
-            {loading ? "Routing…" : "Compare routes"}
+            {loading ? (
+              "Routing…"
+            ) : (
+              <>
+                <Navigation size={16} strokeWidth={2.5} />
+                Compare routes
+              </>
+            )}
           </button>
           <div className="actions-row">
             <button
@@ -723,7 +811,14 @@ export default function App() {
               disabled={loading}
               onClick={runDemo}
             >
-              {loading ? "Loading…" : "Try Demo"}
+              {loading ? (
+                "Loading…"
+              ) : (
+                <>
+                  <Zap size={14} strokeWidth={2.25} />
+                  Try Demo
+                </>
+              )}
             </button>
             <button
               className="btn-ghost"
@@ -731,12 +826,24 @@ export default function App() {
               onClick={voiceEscort}
               disabled={narrateBusy || (!standard && !safewalk)}
             >
-              {narrateBusy ? "Thinking…" : "Reasoning"}
+              {narrateBusy ? (
+                "Thinking…"
+              ) : (
+                <>
+                  <Sparkles size={14} strokeWidth={2.25} />
+                  Reasoning
+                </>
+              )}
             </button>
           </div>
         </div>
 
-        {error ? <p className="error">{error}</p> : null}
+        {error ? (
+          <p className="error">
+            <AlertTriangle size={16} strokeWidth={2.25} style={{ flexShrink: 0, marginTop: 2 }} />
+            <span>{error}</span>
+          </p>
+        ) : null}
         {safewalk?.geometry?.length && !error ? (
           <p className="geo-hint maps-auto-hint">
             Green line = SafeWalk route · Red line = fastest route. Tap{" "}
@@ -749,151 +856,190 @@ export default function App() {
           <p className="route-cards-heading">Routes</p>
           {sameRoute ? (
             <div className="same-route-banner">
-              ✓ Only one route exists here — this is already the safest path available. No shortcuts to avoid.
+              <CheckCircle2 size={16} strokeWidth={2.5} />
+              Only one route exists here — this is already the safest path available.
             </div>
           ) : null}
 
 
-          {/* Fastest route card */}
-          <div className={`route-card fast${walkMode === "standard" ? " route-card-walking" : ""}`}>
-            <div className="route-card-top">
-              <div>
-                <div className="route-card-title-row">
-                  <h3>Fastest Route</h3>
-                  {standard?.safety?.tier ? (
-                    <span className={tierPill(standard.safety.tier)}>
-                      {standard.safety.tier}
+          {loading && !standard && !safewalk ? (
+            <>
+              <div className="route-card-skeleton">
+                <div className="skel-header-row">
+                  <div className="skel-header-text">
+                    <div className="skeleton skel-title" />
+                    <div className="skeleton skel-subtitle" />
+                  </div>
+                  <div className="skeleton skel-ring" />
+                </div>
+                <div className="skel-stats-row">
+                  <div className="skeleton skel-stat" />
+                  <div className="skeleton skel-stat" />
+                  <div className="skeleton skel-stat" />
+                </div>
+              </div>
+              <div className="route-card-skeleton">
+                <div className="skel-header-row">
+                  <div className="skel-header-text">
+                    <div className="skeleton skel-title" />
+                    <div className="skeleton skel-subtitle" />
+                  </div>
+                  <div className="skeleton skel-ring" />
+                </div>
+                <div className="skel-stats-row">
+                  <div className="skeleton skel-stat" />
+                  <div className="skeleton skel-stat" />
+                  <div className="skeleton skel-stat" />
+                </div>
+              </div>
+            </>
+          ) : standard || safewalk ? (
+            <>
+              <div className={`route-card fast${walkMode === "standard" ? " route-card-walking" : ""}`}>
+                <div className="route-card-top">
+                  <div>
+                    <div className="route-card-title-row">
+                      <h3>Fastest Route</h3>
+                      {standard?.safety?.tier ? (
+                        <span className={tierPill(standard.safety.tier)}>
+                          {standard.safety.tier}
+                        </span>
+                      ) : null}
+                    </div>
+                    <p className="route-card-subtitle">Optimized for speed</p>
+                  </div>
+                  <ScoreRing
+                    score={standard?.safety?.score}
+                    tier={standard?.safety?.tier}
+                    description={scoreDescription(standard?.safety?.score)}
+                  />
+                </div>
+                <div className="route-stats-grid">
+                  <div className="route-stat">
+                    <span className="route-stat-value">
+                      <DurationLine durationMin={standard?.duration_min} />
                     </span>
-                  ) : null}
+                    <span className="route-stat-label">Time</span>
+                  </div>
+                  <div className="route-stat">
+                    <span className="route-stat-value">{standard ? `${standard.distance_km} km` : "—"}</span>
+                    <span className="route-stat-label">Distance</span>
+                  </div>
+                  <div className="route-stat">
+                    <span className="route-stat-value">{standard?.safety?.active_business_proximity_hits ?? "—"}</span>
+                    <span className="route-stat-label">Businesses</span>
+                  </div>
                 </div>
-                <p className="route-card-subtitle">Optimized for speed</p>
-              </div>
-              <div className={`safety-badge ${standard?.safety?.tier === "green" ? "safe" : standard?.safety?.tier === "amber" ? "amber" : "danger"}`}>
-                <span className="safety-score-num">
-                  {standard?.safety?.score != null ? standard.safety.score : "—"}
-                </span>
-                <span className="safety-score-label">Safety</span>
-                <div className="safety-tooltip">
-                  {scoreDescription(standard?.safety?.score)}
+                <div className="route-card-actions">
+                  <button
+                    className="btn-walk"
+                    type="button"
+                    disabled={!standard?.steps?.length}
+                    onClick={() => { setWalkMode("standard"); setFollowUser(true); setReportMode(false); }}
+                  >
+                    <Footprints size={14} strokeWidth={2.25} />
+                    Walk here
+                  </button>
+                  <button
+                    className="btn-google-maps"
+                    type="button"
+                    disabled={!standard?.geometry?.length}
+                    onClick={() => openRouteInGoogleMaps(standard)}
+                  >
+                    <ExternalLink size={14} strokeWidth={2.25} />
+                    Google Maps
+                  </button>
                 </div>
+                {standard?.steps?.length ? (
+                  <details className="turn-list">
+                    <summary>
+                      <ChevronDown size={14} className="chevron" strokeWidth={2.5} />
+                      {standard.steps.length} turn-by-turn steps
+                    </summary>
+                    <ol>
+                      {standard.steps.map((st, i) => <li key={`s-${i}`}>{st.instruction}</li>)}
+                    </ol>
+                  </details>
+                ) : null}
               </div>
-            </div>
-            <div className="route-stats-grid">
-              <div className="route-stat">
-                <span className="route-stat-value">
-                  <DurationLine durationMin={standard?.duration_min} />
-                </span>
-                <span className="route-stat-label">Time</span>
-              </div>
-              <div className="route-stat">
-                <span className="route-stat-value">{standard ? `${standard.distance_km} km` : "—"}</span>
-                <span className="route-stat-label">Distance</span>
-              </div>
-              <div className="route-stat">
-                <span className="route-stat-value">{standard?.safety?.active_business_proximity_hits ?? "—"}</span>
-                <span className="route-stat-label">Businesses</span>
-              </div>
-            </div>
-            <div className="route-card-actions">
-              <button
-                className="btn-walk"
-                type="button"
-                disabled={!standard?.steps?.length}
-                onClick={() => { setWalkMode("standard"); setFollowUser(true); setReportMode(false); }}
-              >
-                Walk here
-              </button>
-              <button
-                className="btn-google-maps"
-                type="button"
-                disabled={!standard?.geometry?.length}
-                onClick={() => openRouteInGoogleMaps(standard)}
-              >
-                Google Maps
-              </button>
-            </div>
-            {standard?.steps?.length ? (
-              <details className="turn-list">
-                <summary>{standard.steps.length} turn-by-turn steps</summary>
-                <ol>
-                  {standard.steps.map((st, i) => <li key={`s-${i}`}>{st.instruction}</li>)}
-                </ol>
-              </details>
-            ) : null}
-          </div>
 
-          {/* SafeWalk route card */}
-          <div className={`route-card safe${walkMode === "safewalk" ? " route-card-walking" : ""}`}>
-            <div className="route-card-top">
-              <div>
-                <div className="route-card-title-row">
-                  <h3>SafeWalk Route</h3>
-                  {safewalk?.safety?.tier ? (
-                    <span className={tierPill(safewalk.safety.tier)}>
-                      {safewalk.safety.tier}
+              <div className={`route-card safe${walkMode === "safewalk" ? " route-card-walking" : ""}`}>
+                <div className="route-card-top">
+                  <div>
+                    <div className="route-card-title-row">
+                      <h3>SafeWalk Route</h3>
+                      {safewalk?.safety?.tier ? (
+                        <span className={tierPill(safewalk.safety.tier)}>
+                          {safewalk.safety.tier}
+                        </span>
+                      ) : null}
+                    </div>
+                    <p className="route-card-subtitle">Optimized for safety</p>
+                  </div>
+                  <ScoreRing
+                    score={safewalk?.safety?.score}
+                    tier={safewalk?.safety?.tier}
+                    description={scoreDescription(safewalk?.safety?.score, true)}
+                  />
+                </div>
+                <div className="route-stats-grid">
+                  <div className="route-stat">
+                    <span className="route-stat-value">
+                      <DurationLine durationMin={safewalk?.duration_min} />
                     </span>
-                  ) : null}
+                    <span className="route-stat-label">Time</span>
+                  </div>
+                  <div className="route-stat">
+                    <span className="route-stat-value">{safewalk ? `${safewalk.distance_km} km` : "—"}</span>
+                    <span className="route-stat-label">Distance</span>
+                  </div>
+                  <div className="route-stat">
+                    <span className="route-stat-value">{safewalk?.safety?.active_business_proximity_hits ?? "—"}</span>
+                    <span className="route-stat-label">Businesses</span>
+                  </div>
                 </div>
-                <p className="route-card-subtitle">Optimized for safety</p>
-              </div>
-              <div className={`safety-badge ${safewalk?.safety?.tier === "green" ? "safe" : safewalk?.safety?.tier === "amber" ? "amber" : "danger"}`}>
-                <span className="safety-score-num">
-                  {safewalk?.safety?.score != null ? safewalk.safety.score : "—"}
-                </span>
-                <span className="safety-score-label">Safety</span>
-                <div className="safety-tooltip">
-                  {scoreDescription(safewalk?.safety?.score, true)}
+                <div className="route-card-actions">
+                  <button
+                    className="btn-walk"
+                    type="button"
+                    disabled={!safewalk?.steps?.length}
+                    onClick={() => { setWalkMode("safewalk"); setFollowUser(true); setReportMode(false); }}
+                  >
+                    <Footprints size={14} strokeWidth={2.25} />
+                    Walk here
+                  </button>
+                  <button
+                    className="btn-google-maps"
+                    type="button"
+                    disabled={!safewalk?.geometry?.length}
+                    onClick={() => openRouteInGoogleMaps(safewalk)}
+                  >
+                    <ExternalLink size={14} strokeWidth={2.25} />
+                    Google Maps
+                  </button>
                 </div>
+                {safewalk?.steps?.length ? (
+                  <details className="turn-list">
+                    <summary>
+                      <ChevronDown size={14} className="chevron" strokeWidth={2.5} />
+                      {safewalk.steps.length} turn-by-turn steps
+                    </summary>
+                    <ol>
+                      {safewalk.steps.map((st, i) => <li key={`w-${i}`}>{st.instruction}</li>)}
+                    </ol>
+                  </details>
+                ) : null}
               </div>
-            </div>
-            <div className="route-stats-grid">
-              <div className="route-stat">
-                <span className="route-stat-value">
-                  <DurationLine durationMin={safewalk?.duration_min} />
-                </span>
-                <span className="route-stat-label">Time</span>
-              </div>
-              <div className="route-stat">
-                <span className="route-stat-value">{safewalk ? `${safewalk.distance_km} km` : "—"}</span>
-                <span className="route-stat-label">Distance</span>
-              </div>
-              <div className="route-stat">
-                <span className="route-stat-value">{safewalk?.safety?.active_business_proximity_hits ?? "—"}</span>
-                <span className="route-stat-label">Businesses</span>
-              </div>
-            </div>
-            <div className="route-card-actions">
-              <button
-                className="btn-walk"
-                type="button"
-                disabled={!safewalk?.steps?.length}
-                onClick={() => { setWalkMode("safewalk"); setFollowUser(true); setReportMode(false); }}
-              >
-                Walk here
-              </button>
-              <button
-                className="btn-google-maps"
-                type="button"
-                disabled={!safewalk?.geometry?.length}
-                onClick={() => openRouteInGoogleMaps(safewalk)}
-              >
-                Google Maps
-              </button>
-            </div>
-            {safewalk?.steps?.length ? (
-              <details className="turn-list">
-                <summary>{safewalk.steps.length} turn-by-turn steps</summary>
-                <ol>
-                  {safewalk.steps.map((st, i) => <li key={`w-${i}`}>{st.instruction}</li>)}
-                </ol>
-              </details>
-            ) : null}
-          </div>
+            </>
+          ) : null}
         </div>
 
         {narration ? (
           <div className="narration">
-            <header>🤖 AI Safety Summary</header>
+            <header className="narration-header">
+              <Sparkles size={14} strokeWidth={2.5} />
+              AI Safety Summary
+            </header>
             {narration}
           </div>
         ) : null}
@@ -908,16 +1054,27 @@ export default function App() {
                 setPendingReport(null);
               }}
             >
-              {reportMode ? "Cancel pin drop" : "📍 Report on map"}
+              {reportMode ? (
+                <>
+                  <XCircle size={14} strokeWidth={2.25} />
+                  Cancel pin drop
+                </>
+              ) : (
+                <>
+                  <MapPin size={14} strokeWidth={2.25} />
+                  Report on map
+                </>
+              )}
             </button>
           </div>
           {reportMode ? (
-            <p className="geo-hint" style={{ marginTop: "0.5rem" }}>
+            <p className="geo-hint">
               Tap the map where the issue is. Reports affect safety scores for everyone.
             </p>
           ) : null}
           {pendingReport ? (
             <div className="report-form">
+              <p className="report-form-label">What are you reporting?</p>
               <select
                 value={reportKind}
                 onChange={(e) => setReportKind(e.target.value)}
@@ -934,6 +1091,7 @@ export default function App() {
               />
               <div className="actions-row">
                 <button className="btn-primary" type="button" onClick={submitReport}>
+                  <Send size={14} strokeWidth={2.25} />
                   Submit report
                 </button>
                 <button
@@ -953,7 +1111,6 @@ export default function App() {
         <MapContainer
           center={DEFAULT_CENTER}
           zoom={13}
-          style={{ height: "100%", minHeight: "100vh" }}
           scrollWheelZoom
         >
           <TileLayer
@@ -988,8 +1145,8 @@ export default function App() {
               positions={standard.geometry.map(([lon, lat]) => [lat, lon])}
               pathOptions={
                 walkMode === "safewalk"
-                  ? { color: "#ff5c6c", weight: 5, opacity: 0.22 }
-                  : { color: "#ff5c6c", weight: 7, opacity: 0.95 }
+                  ? { color: MAP_COLORS.standard, weight: 5, opacity: 0.22 }
+                  : { color: MAP_COLORS.standard, weight: 7, opacity: 0.95 }
               }
             />
           ) : null}
@@ -998,8 +1155,8 @@ export default function App() {
               positions={safewalk.geometry.map(([lon, lat]) => [lat, lon])}
               pathOptions={
                 walkMode === "standard"
-                  ? { color: "#38d39f", weight: 5, opacity: 0.22 }
-                  : { color: "#38d39f", weight: 7, opacity: 0.95 }
+                  ? { color: MAP_COLORS.safewalk, weight: 5, opacity: 0.22 }
+                  : { color: MAP_COLORS.safewalk, weight: 7, opacity: 0.95 }
               }
             />
           ) : null}
@@ -1010,8 +1167,8 @@ export default function App() {
                 center={[userPos.lat, userPos.lng]}
                 radius={Math.min(Math.max(userPos.accuracy || 25, 12), 120)}
                 pathOptions={{
-                  color: "#6eb7ff",
-                  fillColor: "#6eb7ff",
+                  color: MAP_COLORS.userRing,
+                  fillColor: MAP_COLORS.userRing,
                   fillOpacity: 0.12,
                   weight: 1,
                 }}
@@ -1020,8 +1177,8 @@ export default function App() {
                 center={[userPos.lat, userPos.lng]}
                 radius={7}
                 pathOptions={{
-                  color: "#1e5eff",
-                  fillColor: "#6eb7ff",
+                  color: MAP_COLORS.userDot,
+                  fillColor: MAP_COLORS.userRing,
                   fillOpacity: 1,
                   weight: 3,
                 }}
@@ -1037,8 +1194,8 @@ export default function App() {
               center={[rep.lat, rep.lon]}
               radius={9}
               pathOptions={{
-                color: "#f0b429",
-                fillColor: "#ffdc73",
+                color: MAP_COLORS.reportStroke,
+                fillColor: MAP_COLORS.reportFill,
                 fillOpacity: 0.85,
                 weight: 2,
               }}
@@ -1055,8 +1212,8 @@ export default function App() {
               center={[pendingReport.lat, pendingReport.lng]}
               radius={11}
               pathOptions={{
-                color: "#3ee6b0",
-                fillColor: "#3ee6b0",
+                color: MAP_COLORS.pendingMark,
+                fillColor: MAP_COLORS.pendingMark,
                 fillOpacity: 0.35,
                 weight: 3,
               }}
@@ -1066,16 +1223,21 @@ export default function App() {
 
         {walkMode ? (
           <div className="walk-hud" aria-live="polite">
-            <div className="walk-hud-top">
-              <div>
-                <strong>
-                  {walkMode === "safewalk" ? "SafeWalk route" : "Fastest route"}
-                </strong>
-                <span className="walk-hud-sub">Live walk mode</span>
+            <div className="walk-hud-header">
+              <div className="walk-hud-route-info">
+                <div className="walk-hud-route-icon">
+                  <Navigation size={18} strokeWidth={2.5} />
+                </div>
+                <div className="walk-hud-route-label">
+                  <strong>
+                    {walkMode === "safewalk" ? "SafeWalk Route" : "Fastest Route"}
+                  </strong>
+                  <span className="walk-hud-sub">Live navigation</span>
+                </div>
               </div>
               <button
                 type="button"
-                className="btn-ghost btn-hud-stop"
+                className="btn-hud-stop"
                 onClick={() => {
                   setWalkMode(null);
                   if (window.speechSynthesis) {
@@ -1083,34 +1245,39 @@ export default function App() {
                   }
                 }}
               >
-                End walk
+                <XCircle size={14} strokeWidth={2.5} />
+                End
               </button>
             </div>
-            {geoError ? <p className="error walk-hud-msg">{geoError}</p> : null}
+            {geoError ? (
+              <p className="error walk-hud-msg">
+                <AlertTriangle size={14} strokeWidth={2.25} style={{ flexShrink: 0 }} />
+                <span>{geoError}</span>
+              </p>
+            ) : null}
             {!userPos && !geoError ? (
               <p className="geo-hint walk-hud-msg">Acquiring GPS…</p>
             ) : null}
             {walkDerived.snapshot ? (
               <>
-                <p className="walk-next-label">Next</p>
-                <p className="walk-next-text">
-                  {walkDerived.snapshot.nextInstruction}
-                </p>
-                <div className="walk-stats">
-                  <span>
-                    ~{Math.round(walkDerived.snapshot.remainingStepM)} m to
-                    maneuver
-                  </span>
-                  <span className="walk-dot">·</span>
-                  <span>
-                    ETA ~
-                    {Math.max(1, Math.round(walkDerived.snapshot.etaMin))}{" "}
-                    min
-                  </span>
-                  <span className="walk-dot">·</span>
-                  <span>
-                    {Math.round(walkDerived.snapshot.remainingM)} m left
-                  </span>
+                <div className="walk-hud-next-block">
+                  <p className="walk-next-label">Next</p>
+                  <p className="walk-next-text">
+                    {walkDerived.snapshot.nextInstruction}
+                  </p>
+                  <div className="walk-stats">
+                    <span>
+                      <strong>~{Math.round(walkDerived.snapshot.remainingStepM)} m</strong> to maneuver
+                    </span>
+                    <span className="walk-dot">·</span>
+                    <span>
+                      ETA <strong>~{Math.max(1, Math.round(walkDerived.snapshot.etaMin))} min</strong>
+                    </span>
+                    <span className="walk-dot">·</span>
+                    <span>
+                      <strong>{Math.round(walkDerived.snapshot.remainingM)} m</strong> left
+                    </span>
+                  </div>
                 </div>
                 <div className="walk-progress-track">
                   <div
@@ -1123,13 +1290,14 @@ export default function App() {
                 {Number.isFinite(walkDerived.crossTrackM) &&
                 walkDerived.crossTrackM > 48 ? (
                   <p className="walk-off-route">
-                    Step back toward the line (~
-                    {Math.round(walkDerived.crossTrackM)} m off route)
+                    <AlertTriangle size={14} strokeWidth={2.5} />
+                    Step back toward the line (~{Math.round(walkDerived.crossTrackM)} m off route)
                   </p>
                 ) : null}
                 {walkDerived.snapshot.atDestination ? (
                   <p className="walk-arrived">
-                    You’ve reached the destination area.
+                    <CheckCircle2 size={14} strokeWidth={2.5} />
+                    You've reached the destination area.
                   </p>
                 ) : null}
               </>
@@ -1140,20 +1308,29 @@ export default function App() {
                 className={followUser ? "btn-primary" : "btn-ghost"}
                 onClick={() => setFollowUser((v) => !v)}
               >
-                {followUser ? "Following" : "Free map"}
+                {followUser ? (
+                  <><Crosshair size={13} strokeWidth={2.5} /> Following</>
+                ) : (
+                  <><MapIcon size={13} strokeWidth={2.5} /> Free map</>
+                )}
               </button>
               <button
                 type="button"
                 className={voiceGuidance ? "btn-primary" : "btn-ghost"}
                 onClick={() => setVoiceGuidance((v) => !v)}
               >
-                {voiceGuidance ? "Voice on" : "Voice off"}
+                {voiceGuidance ? (
+                  <><Volume2 size={13} strokeWidth={2.5} /> Voice on</>
+                ) : (
+                  <><VolumeX size={13} strokeWidth={2.5} /> Voice off</>
+                )}
               </button>
               <button
                 type="button"
                 className="btn-ghost"
                 onClick={() => setFollowUser(true)}
               >
+                <LocateFixed size={13} strokeWidth={2.5} />
                 Recenter
               </button>
               <button
@@ -1161,7 +1338,8 @@ export default function App() {
                 className="btn-ghost"
                 onClick={() => openRouteInGoogleMaps(activeWalkRoute)}
               >
-                Google Maps
+                <ExternalLink size={13} strokeWidth={2.5} />
+                Maps
               </button>
             </div>
           </div>
