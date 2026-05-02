@@ -717,6 +717,7 @@ export default function App() {
   const [followUser, setFollowUser] = useState(true);
   const [voiceGuidance, setVoiceGuidance] = useState(true);
   const lastSpokenStep = useRef(-1);
+  const narrationRef = useRef(null);
 
   const startWalk = (mode) => {
     const route = mode === "safewalk" ? safewalk : standard;
@@ -966,6 +967,7 @@ export default function App() {
       setNarration("Reasoning unavailable - could not reach the backend.");
     } finally {
       setNarrateBusy(false);
+      setTimeout(() => narrationRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
     }
   };
 
@@ -1336,7 +1338,7 @@ export default function App() {
         </div>
 
         {narration ? (
-          <div className="narration">
+          <div className="narration" ref={narrationRef}>
             <header className="narration-header">
               <Sparkles size={14} strokeWidth={2.5} />
               Reasoning
