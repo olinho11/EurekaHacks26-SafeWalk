@@ -989,31 +989,35 @@ export default function App() {
     loadReports();
   }, [loadReports]);
 
-  const submitReport = async () => {
+  const submitReport = () => {
     if (!pendingReport) return;
-    await fetch(`${apiBase}/api/reports`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        lat: pendingReport.lat,
-        lon: pendingReport.lng,
-        kind: reportKind,
-        message: reportMsg,
-      }),
+
+    // Simulate "sending" by logging to console instead of a fetch call
+    console.log("Mock Feedback Sent:", {
+      lat: pendingReport.lat,
+      lon: pendingReport.lng,
+      kind: reportKind,
+      message: reportMsg,
     });
+
+    // Reset the UI state
     setPendingReport(null);
     setReportMsg("");
     setReportMode(false);
-    loadReports();
-    // Show success message and confetti
-    setReportSuccess("Thank you for helping keep our community safe! Your report has been submitted.");
+    
+    // Trigger the success UI
+    setReportSuccess("Feedback sent! Thank you for helping the community.");
+    
+    // Fun visual feedback
     confetti({
       particleCount: 100,
       spread: 70,
-      origin: { y: 0.6 }
+      origin: { y: 0.6 },
+      colors: [THEMES.find(t => t.id === theme)?.color || '#3ee6b0', '#ffffff']
     });
-    // Clear success message after 5 seconds
-    setTimeout(() => setReportSuccess(""), 5000);
+
+    // Auto-hide the message after a few seconds
+    setTimeout(() => setReportSuccess(""), 4000);
   };
 
 

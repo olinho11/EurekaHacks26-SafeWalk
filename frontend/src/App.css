@@ -67,7 +67,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* â”€â”€ Layout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .app-shell {
   display: grid;
   grid-template-columns: 460px 1fr;
@@ -2026,3 +2025,21 @@ button:active:not(:disabled) {
   box-shadow: 0 0 20px var(--accent);
 }
 
+.success-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(62, 230, 176, 0.1); /* Using the teal color */
+  color: #3ee6b0;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(62, 230, 176, 0.3);
+  margin-top: 12px;
+  font-size: 0.9rem;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
