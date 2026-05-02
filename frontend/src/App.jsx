@@ -25,7 +25,6 @@ import {
   projectAlongPolyline,
 } from "./walkUtils.js";
 import {
-  Shield,
   CheckCircle2,
   Sparkles,
   MapPin,
@@ -41,8 +40,6 @@ import {
   AlertTriangle,
   Zap,
   Footprints,
-  Building2,
-  Clock,
   Send,
 } from "lucide-react";
 
@@ -753,9 +750,13 @@ export default function App() {
       <aside className="side-panel">
         <div className="brand">
           <div className="brand-header">
-            <div className="brand-logo">
-              <Shield size={26} strokeWidth={2.5} className="brand-shield-icon" />
-            </div>
+            <img
+              src="/logo.png"
+              alt="SafeWalk"
+              className="brand-logo-img"
+              width="56"
+              height="56"
+            />
             <h1 className="brand-wordmark">SafeWalk</h1>
           </div>
           <p className="brand-tagline">

@@ -103,20 +103,20 @@ body {
   gap: var(--sp-3);
 }
 
-.brand-logo {
-  width: 44px;
-  height: 44px;
-  border-radius: var(--r-sm);
-  background: var(--accent-dim);
-  border: 1px solid rgba(62, 230, 176, 0.25);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.brand-logo-img {
+  width: 56px;
+  height: 56px;
   flex-shrink: 0;
-  box-shadow: 0 0 24px rgba(62, 230, 176, 0.15);
+  border-radius: var(--r-sm);
+  object-fit: contain;
+  filter: drop-shadow(0 4px 16px rgba(255, 200, 60, 0.18));
+  transition: transform 0.3s ease, filter 0.3s ease;
 }
 
-.brand-shield-icon { color: var(--accent); }
+.brand-logo-img:hover {
+  transform: scale(1.05);
+  filter: drop-shadow(0 6px 20px rgba(255, 200, 60, 0.28));
+}
 
 .brand-wordmark {
   font-size: var(--text-xl);
