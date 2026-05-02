@@ -52,14 +52,26 @@ def narrate():
     api_key = os.environ.get("ANTHROPIC_API_KEY")
 
     def fallback() -> str:
-        std_s = (standard or {}).get("safety", {}).get("score", "?")
+        same = body.get("same_route", False)
         safe_s = (safewalk or {}).get("safety", {}).get("score", "?")
+        std_s = (standard or {}).get("safety", {}).get("score", "?")
         dm = (safewalk or {}).get("duration_min", "?")
+        if same:
+            return (
+                f"There's only one viable route for this trip, scoring {safe_s}/100 "
+                f"on our lighting and foot-traffic model. "
+                f"It takes about {dm} minutes. Stay on well-lit sections and keep your route visible to others."
+            )
+        if safe_s == std_s:
+            return (
+                f"Both routes score similarly ({safe_s}/100) — the area has consistent "
+                f"lighting and business density along both paths. "
+                f"The SafeWalk route is slightly preferred. Walk takes about {dm} minutes."
+            )
         return (
-            f"SafeWalk picked the greener route with safety score {safe_s} "
-            f"(about {dm} minutes). The faster option scores around {std_s} on our "
-            f"lighting and foot-traffic model—stick to the SafeWalk path when you "
-            f"want natural surveillance from open shops and better-lit streets."
+            f"SafeWalk chose the route scoring {safe_s}/100 over the faster option at {std_s}/100. "
+            f"The difference comes down to more open businesses and better-lit streets along the SafeWalk path. "
+            f"About {dm} minutes."
         )
 
     if not api_key:

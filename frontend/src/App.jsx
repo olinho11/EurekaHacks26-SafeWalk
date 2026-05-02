@@ -119,11 +119,12 @@ function tierPill(tier) {
   return "pill red";
 }
 
-function scoreDescription(score) {
+function scoreDescription(score, isSafewalk = false) {
   if (score == null) return null;
   if (score >= 75) return "Excellent — well-lit streets with lots of open businesses and foot traffic the whole way. Safe to walk at any hour.";
   if (score >= 55) return "Good — solid lighting and plenty of businesses nearby. Most people would feel comfortable on this route.";
   if (score >= 35) return "Moderate — some stretches are quieter or darker. Fine during the day; take extra care at night.";
+  if (isSafewalk) return "Low — limited amenities and lighting near this route. This is still the safest available option for this trip.";
   return "Low — limited lighting and few open businesses along this path. Consider taking the SafeWalk route instead.";
 }
 
@@ -376,6 +377,7 @@ export default function App() {
   const [end, setEnd] = useState(null);
   const [standard, setStandard] = useState(null);
   const [safewalk, setSafewalk] = useState(null);
+  const [sameRoute, setSameRoute] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [narration, setNarration] = useState("");
@@ -523,9 +525,11 @@ export default function App() {
       if (!r.ok) throw new Error(j.error || "Routing failed.");
       setStandard(j.standard);
       setSafewalk(j.safewalk);
+      setSameRoute(j.same_route || false);
     } catch (err) {
       setStandard(null);
       setSafewalk(null);
+      setSameRoute(false);
       setError(err.message || String(err));
     } finally {
       setLoading(false);
@@ -592,6 +596,7 @@ export default function App() {
       if (!r.ok) throw new Error(j.error || "Routing failed.");
       setStandard(j.standard);
       setSafewalk(j.safewalk);
+      setSameRoute(j.same_route || false);
     } catch (err) {
       setStandard(null);
       setSafewalk(null);
@@ -617,7 +622,7 @@ export default function App() {
       const r = await fetch(`${apiBase}/api/narrate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ standard, safewalk }),
+        body: JSON.stringify({ standard, safewalk, same_route: sameRoute }),
       });
       const j = await readJsonResponse(r);
       setNarration(j.text || "");
@@ -742,6 +747,12 @@ export default function App() {
 
         <div className="route-cards">
           <p className="route-cards-heading">Routes</p>
+          {sameRoute ? (
+            <div className="same-route-banner">
+              ✓ Only one route exists here — this is already the safest path available. No shortcuts to avoid.
+            </div>
+          ) : null}
+
 
           {/* Fastest route card */}
           <div className={`route-card fast${walkMode === "standard" ? " route-card-walking" : ""}`}>
@@ -831,7 +842,7 @@ export default function App() {
                 </span>
                 <span className="safety-score-label">Safety</span>
                 <div className="safety-tooltip">
-                  {scoreDescription(safewalk?.safety?.score)}
+                  {scoreDescription(safewalk?.safety?.score, true)}
                 </div>
               </div>
             </div>

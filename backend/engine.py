@@ -25,6 +25,23 @@ def haversine_m(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     return 2 * r * math.asin(min(1.0, math.sqrt(a)))
 
 
+def offset_point(lat: float, lon: float, bearing_deg: float, dist_m: float) -> tuple[float, float]:
+    """Return a point dist_m away from (lat, lon) at bearing_deg (degrees from north)."""
+    R = 6371000.0
+    b = math.radians(bearing_deg)
+    lat_r = math.radians(lat)
+    lon_r = math.radians(lon)
+    lat2 = math.asin(
+        math.sin(lat_r) * math.cos(dist_m / R)
+        + math.cos(lat_r) * math.sin(dist_m / R) * math.cos(b)
+    )
+    lon2 = lon_r + math.atan2(
+        math.sin(b) * math.sin(dist_m / R) * math.cos(lat_r),
+        math.cos(dist_m / R) - math.sin(lat_r) * math.sin(lat2),
+    )
+    return math.degrees(lat2), math.degrees(lon2)
+
+
 def bbox_pad(lat1: float, lon1: float, lat2: float, lon2: float, pad: float = 0.012) -> tuple[float, float, float, float]:
     south = min(lat1, lat2) - pad
     north = max(lat1, lat2) + pad
@@ -226,7 +243,8 @@ def overpass_context(south: float, west: float, north: float, east: float) -> di
 def geom_signature(geom: list[list[float]]) -> str:
     if len(geom) < 2:
         return ""
-    idxs = (0, len(geom) // 2, len(geom) - 1)
+    n = len(geom)
+    idxs = [int(i * (n - 1) / 6) for i in range(7)]
     parts: list[str] = []
     for i in idxs:
         lon, lat = geom[i]
@@ -324,43 +342,88 @@ def route_length_km(coords_lonlat: list[list[float]]) -> float:
 
 
 def find_candidate_via_points(lat1: float, lon1: float, lat2: float, lon2: float) -> list[tuple[float, float]]:
-    """Use Overpass to find lit major roads / amenities near corridor midpoint."""
+    """
+    Find via-points PERPENDICULAR to the A->B corridor so OSRM is forced to detour
+    left or right of the direct path, producing genuinely different routes.
+    """
+    # Compute bearing A->B
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
+    y = math.sin(dlon) * math.cos(math.radians(lat2))
+    x = math.cos(math.radians(lat1)) * math.sin(math.radians(lat2)) - math.sin(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.cos(dlon)
+    bearing = (math.degrees(math.atan2(y, x)) + 360) % 360
+
     mid_lat = (lat1 + lat2) / 2
     mid_lon = (lon1 + lon2) / 2
-    query = f"""
-    [out:json][timeout:25];
-    (
-      node["amenity"~"^(cafe|restaurant|bar|pub|fuel|convenience)$"](around:450,{mid_lat},{mid_lon});
-      way["highway"~"^(primary|secondary|tertiary)$"]["lit"~"^(yes|automatic)$"](around:400,{mid_lat},{mid_lon});
-    );
-    out center;
-    """
-    points: list[tuple[float, float]] = []
-    try:
-        with httpx.Client(timeout=35.0, headers={"User-Agent": "SafeWalk/1.0 (hackathon demo)"}) as client:
-            r = client.post(OVERPASS, content=query.encode("utf-8"))
-            r.raise_for_status()
-            data = r.json()
-        for el in data.get("elements") or []:
-            lat = el.get("lat")
-            lon = el.get("lon")
-            if lat is None and el.get("center"):
-                lat = el["center"]["lat"]
-                lon = el["center"]["lon"]
-            if lat is not None and lon is not None:
-                points.append((float(lat), float(lon)))
-    except Exception:
-        pass
 
-    # Prefer points closer to the chord between start/end (stay roughly en route)
-    def chord_dist(p: tuple[float, float]) -> float:
-        # distance from p to line segment — approximate using distances to endpoints
+    # Quarter-point and three-quarter-point along the corridor
+    q1_lat = lat1 + 0.25 * (lat2 - lat1)
+    q1_lon = lon1 + 0.25 * (lon2 - lon1)
+    q3_lat = lat1 + 0.75 * (lat2 - lat1)
+    q3_lon = lon1 + 0.75 * (lon2 - lon1)
+
+    straight_m = haversine_m(lat1, lon1, lat2, lon2)
+    # Search offset: 15-20% of total distance, min 150m, max 400m
+    offset_m = max(150.0, min(400.0, straight_m * 0.18))
+
+    # Search left and right of the corridor at midpoint and quarter points
+    search_origins = [
+        offset_point(mid_lat, mid_lon, (bearing + 90) % 360, offset_m),   # left of mid
+        offset_point(mid_lat, mid_lon, (bearing - 90) % 360, offset_m),   # right of mid
+        offset_point(q1_lat, q1_lon, (bearing + 90) % 360, offset_m),     # left of Q1
+        offset_point(q3_lat, q3_lon, (bearing - 90) % 360, offset_m),     # right of Q3
+    ]
+
+    points: list[tuple[float, float]] = []
+    seen: set[str] = set()
+
+    for slat, slon in search_origins:
+        query = f"""
+[out:json][timeout:20];
+(
+  node["amenity"~"^(cafe|restaurant|bar|pub|fuel|convenience|fast_food|pharmacy)$"](around:280,{slat},{slon});
+  way["lit"="yes"]["highway"~"^(primary|secondary|tertiary|residential)$"](around:280,{slat},{slon});
+);
+out center;
+"""
+        try:
+            with httpx.Client(timeout=25.0, headers={"User-Agent": "SafeWalk/1.0 (hackathon demo)"}) as client:
+                r = client.post(OVERPASS, content=query.encode("utf-8"))
+                r.raise_for_status()
+                data = r.json()
+            for el in data.get("elements") or []:
+                lat = el.get("lat")
+                lon = el.get("lon")
+                if lat is None and el.get("center"):
+                    lat = el["center"]["lat"]
+                    lon = el["center"]["lon"]
+                if lat is None or lon is None:
+                    continue
+                lat, lon = float(lat), float(lon)
+                # Must be genuinely off the direct corridor (> 80m perpendicular displacement)
+                d_to_start = haversine_m(lat1, lon1, lat, lon)
+                d_to_end = haversine_m(lat2, lon2, lat, lon)
+                d_chord = haversine_m(lat1, lon1, lat2, lon2)
+                # Reject if point is too close to direct line (on-corridor points)
+                excess = (d_to_start + d_to_end) - d_chord
+                if excess < 80:
+                    continue
+                key = f"{round(lat, 3)},{round(lon, 3)}"
+                if key in seen:
+                    continue
+                seen.add(key)
+                points.append((lat, lon))
+        except Exception:
+            continue
+
+    # Sort by how far off the corridor they are (more detour = more different route)
+    def off_corridor(p: tuple[float, float]) -> float:
         d1 = haversine_m(lat1, lon1, p[0], p[1])
         d2 = haversine_m(lat2, lon2, p[0], p[1])
-        return (d1 + d2) / 2
+        return (d1 + d2) - straight_m
 
-    points.sort(key=chord_dist)
-    return points[:3]
+    points.sort(key=off_corridor, reverse=True)
+    return points[:4]
 
 
 def compute_routes(
@@ -411,11 +474,18 @@ def compute_routes(
     for rt in alt_routes:
         add_candidate(rt)
 
-    # 2) Biased "safe" route via OSM anchors
+    # 2) Biased "safe" routes via perpendicular OSM anchors (left/right of corridor)
     vias = find_candidate_via_points(start_lat, start_lon, end_lat, end_lon)
-    for via in vias[:2]:
+    for via in vias[:4]:
         vl = (via[1], via[0])
         seg = fetch_osrm_route([start, vl, end], alternatives=False, include_steps=True)
+        for rt in seg:
+            add_candidate(rt)
+    # Also try chaining two via-points for a longer detour
+    if len(vias) >= 2:
+        vl1 = (vias[0][1], vias[0][0])
+        vl2 = (vias[1][1], vias[1][0])
+        seg = fetch_osrm_route([start, vl1, vl2, end], alternatives=False, include_steps=True)
         for rt in seg:
             add_candidate(rt)
 
@@ -505,9 +575,12 @@ def compute_routes(
             pick = max(slower, key=lambda x: (x[1]["score"], x[0].get("duration_s", 0)))
             resafe(pick)
 
+    same_route = geom_signature(safewalk[2]) == geom_signature(standard[2])
+
     return {
         "standard": std_pkg,
         "safewalk": safe_pkg,
+        "same_route": same_route,
         "context": {
             "bbox": [south, west, north, east],
             "osm_amenity_points": len(ctx.get("amenities") or []),
