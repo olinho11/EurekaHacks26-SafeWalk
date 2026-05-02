@@ -2200,3 +2200,20 @@ button:active:not(:disabled) {
   --accent-dim: rgba(var(--accent-rgb), 0.12);
   --accent-glow: rgba(var(--accent-rgb), 0.25);
 }
+
+/* ── Try Demo Glow ───────────────────────────────────── */
+@keyframes demoGlow {
+  0% { box-shadow: 0 0 0px var(--accent-glow); }
+  50% { box-shadow: 0 0 15px var(--accent), 0 0 30px var(--accent-glow); border-color: var(--accent); }
+  100% { box-shadow: 0 0 0px var(--accent-glow); }
+}
+
+.btn-demo-glow {
+  animation: demoGlow 2s infinite ease-in-out;
+  color: var(--text);
+}
+.btn-demo-glow:hover:not(:disabled) {
+  animation: none;
+  box-shadow: 0 0 20px var(--accent);
+}
+

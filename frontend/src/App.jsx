@@ -1087,7 +1087,7 @@ export default function App() {
           </button>
           <div className="actions-row">
             <button
-              className="btn-ghost"
+              className="btn-ghost btn-demo-glow"
               type="button"
               disabled={loading}
               onClick={runDemo}
