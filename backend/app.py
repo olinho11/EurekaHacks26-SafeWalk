@@ -108,13 +108,13 @@ def narrate():
             if both_poor:
                 lines.append(
                     f"This area has limited street lighting and few active businesses along either route "
-                    f"(SafeWalk scores {round(safe_s)}/100, fastest scores {round(std_s)}/100) — "
-                    f"natural surveillance is low regardless of which path you take."
+                    f"(SafeWalk scores {round(safe_s)}/100, fastest scores {round(std_s)}/100). "
+                    f"Natural surveillance is low regardless of which path you take."
                 )
             else:
                 lines.append(
-                    f"Both routes are similar in safety ({round(safe_s)}/100 vs {round(std_s)}/100) — "
-                    f"the difference is too small to matter."
+                    f"Both routes are similar in safety ({round(safe_s)}/100 vs {round(std_s)}/100). "
+                    f"The difference is too small to matter."
                 )
             lines.append(
                 "If you're walking at night: stick to the main road, let someone know your route, "
@@ -123,7 +123,7 @@ def narrate():
             if extra_min is not None and extra_min > 0:
                 lines.append(
                     f"The faster option saves {extra_min} {'minute' if extra_min == 1 else 'minutes'} "
-                    f"and is the practical choice here — less time outside means less exposure."
+                    f"and is the practical choice here. Less time outside means less exposure."
                 )
             elif safe_dm is not None:
                 lines.append(f"Total walk time is about {fmt_min(safe_dm)} minutes.")
@@ -132,7 +132,7 @@ def narrate():
         # Normal comparison mode
         if score_gap is not None and score_gap > 0:
             lines.append(
-                f"SafeWalk chose the {round(safe_s)}/100 route over the faster {round(std_s)}/100 option — "
+                f"SafeWalk chose the {round(safe_s)}/100 route over the faster {round(std_s)}/100 option, "
                 f"a {score_gap}-point safety advantage."
             )
         else:
@@ -142,7 +142,7 @@ def narrate():
         if safe_lit is not None:
             if lit_gap is not None and lit_gap >= 5:
                 lines.append(
-                    f"The SafeWalk route has {round(safe_lit)}% lit road coverage — "
+                    f"The SafeWalk route has {round(safe_lit)}% lit road coverage, "
                     f"{lit_gap} percentage points more than the fastest path."
                 )
             else:
@@ -152,20 +152,20 @@ def narrate():
         if safe_biz is not None:
             if biz_gap > 0:
                 lines.append(
-                    f"It passes {safe_biz} active {'business' if safe_biz == 1 else 'businesses'} — "
-                    f"{biz_gap} more than the direct route — keeping natural surveillance high."
+                    f"It passes {safe_biz} active {'business' if safe_biz == 1 else 'businesses'}, "
+                    f"{biz_gap} more than the direct route, keeping natural surveillance high."
                 )
             elif safe_biz > 0:
                 lines.append(f"{safe_biz} active {'business' if safe_biz == 1 else 'businesses'} line the route, providing natural surveillance.")
 
         # Isolation note
         if safe_iso is not None and safe_iso > 20:
-            lines.append(f"About {round(safe_iso)}% of the route has limited lighting and amenities — stay alert in those stretches.")
+            lines.append(f"About {round(safe_iso)}% of the route has limited lighting and amenities. Stay alert in those stretches.")
 
         # Time cost
         if extra_min is not None and extra_min > 0:
             if score_gap is not None and score_gap > 0:
-                lines.append(f"It adds {extra_min} {'minute' if extra_min == 1 else 'minutes'} — a worthwhile trade-off for {score_gap} points of extra safety.")
+                lines.append(f"It adds {extra_min} {'minute' if extra_min == 1 else 'minutes'}, a worthwhile trade-off for {score_gap} points of extra safety.")
             else:
                 lines.append(f"Walk time is about {fmt_min(safe_dm)} minutes.")
         elif safe_dm is not None:

@@ -69,7 +69,7 @@ def _instruction_from_step(step: dict[str, Any]) -> str:
     if typ == "arrive":
         return "Arrive at destination"
     if typ in ("roundabout", "rotary"):
-        return "Enter the roundabout" + (f" — exit toward {street()}" if name else "")
+        return "Enter the roundabout" + (f", then exit toward {street()}" if name else "")
     if typ == "roundabout turn":
         turn = mod.title() if mod else "Continue"
         return f"At the roundabout, {turn.lower()}" + (f" onto {street()}" if name else "")
@@ -295,7 +295,7 @@ def score_route_against_context(
         lit_dists.append(l)
 
     # --- Component 1: Business coverage (0-30 pts, time-scaled) ---
-    # % of route within 80 m of an open business — tight enough to distinguish streets
+    # % of route within 80 m of an open business, tight enough to distinguish streets
     BUSI_CLOSE = 80.0
     business_hits = sum(1 for d in business_dists if d <= BUSI_CLOSE)
     business_coverage = business_hits / n
@@ -321,8 +321,8 @@ def score_route_against_context(
     hour = datetime.datetime.now().hour
     time_weight = time_of_day_amenity_weight(hour)
 
-    # Business coverage matters less at night (shops closed) — scale by time_weight.
-    # Lit coverage matters 24/7 — streets are either lit or they're not.
+    # Business coverage matters less at night (shops closed), scale by time_weight.
+    # Lit coverage matters 24/7, streets are either lit or they're not.
     business_pts = 30.0 * business_coverage * time_weight
     lit_pts = 45.0 * lit_coverage
     isolation_penalty = 25.0 * isolation_frac
@@ -447,7 +447,7 @@ def compute_routes(
     if straight_m > 10_000:
         km = round(straight_m / 1000, 1)
         return {
-            "error": f"That's about {km} km away — too far to walk safely. SafeWalk is designed for walks under 10 km. Try a closer destination or use transit.",
+            "error": f"That's about {km} km away. Too far to walk safely. SafeWalk is designed for walks under 10 km. Try a closer destination or use transit.",
             "standard": None,
             "safewalk": None,
         }

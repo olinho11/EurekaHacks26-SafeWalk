@@ -29,7 +29,7 @@ const Onboarding = ({ onComplete }) => {
     {
       title: "Natural Surveillance",
       tagline: "Safety in Numbers",
-      description: "Our navigation favors 'Natural Surveillance'—routes with active streetlights, consistent foot traffic, and open businesses.",
+      description: "Our navigation favors 'Natural Surveillance': routes with active streetlights, consistent foot traffic, and open businesses.",
       features: [
         { icon: <Lightbulb size={20} />, text: "Well-lit thoroughfares" },
         { icon: <Users size={20} />, text: "Higher pedestrian volume" },

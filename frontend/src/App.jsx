@@ -170,8 +170,8 @@ function SettingsModal({ open, onClose, theme, onThemeChange }) {
                   </div>
                 </div>
                 <p>
-                  SafeWalk routes pedestrians by natural surveillance — lit streets, foot traffic, and open
-                  businesses — instead of just shortest time. Built on the principle that safety comes from{" "}
+                  SafeWalk routes pedestrians by natural surveillance - lit streets, foot traffic, and open
+                  businesses - instead of just shortest time. Built on the principle that safety comes from{" "}
                   <em>"eyes on the street"</em>, not from avoiding people.
                 </p>
                 <p>
@@ -186,7 +186,7 @@ function SettingsModal({ open, onClose, theme, onThemeChange }) {
               <section className="settings-pane">
                 <header className="settings-pane-header">
                   <h3>Privacy Policy</h3>
-                  <p>What we don't collect — and why we don't need to.</p>
+                  <p>What we don't collect - and why we don't need to.</p>
                 </header>
                 <p>
                   <strong>SafeWalk does not collect, store, or transmit personal information.</strong> Your location
@@ -195,7 +195,7 @@ function SettingsModal({ open, onClose, theme, onThemeChange }) {
                 </p>
                 <p>
                   Address autocomplete queries are forwarded to OpenStreetMap's Nominatim service. Map tiles and
-                  routing come from OpenStreetMap. Voice guidance uses your browser's built-in speech synthesis —
+                  routing come from OpenStreetMap. Voice guidance uses your browser's built-in speech synthesis -
                   nothing is uploaded.
                 </p>
                 <p>
@@ -294,7 +294,7 @@ async function readJsonResponse(response) {
 }
 
 /**
- * Walking directions A→B only. Do not stuff our polyline with via points — Google
+ * Walking directions A→B only. Do not stuff our polyline with via points - Google
  * then zig-zags through dozens of forced corners and looks broken.
  * Users still see SafeWalk’s route on our map; Maps gets a sane pedestrian route.
  */
@@ -402,7 +402,7 @@ function ScoreRing({ score, tier, description }) {
         />
       </svg>
       <span className="score-ring-num" style={{ color: numColor }}>
-        {score != null ? score : "—"}
+        {score != null ? score : "-"}
       </span>
       {description ? (
         <div className="score-ring-tooltip">{description}</div>
@@ -447,7 +447,7 @@ function scoreDescription(thisSafety, otherSafety, isSafewalk = false) {
 
 /** `durationMin` is decimal minutes from the API. */
 function formatDurationMinutes(durationMin) {
-  if (durationMin == null || Number.isNaN(Number(durationMin))) return "—";
+  if (durationMin == null || Number.isNaN(Number(durationMin))) return "-";
   let total = Math.round(Number(durationMin));
   if (total < 1) total = 1;
 
@@ -475,7 +475,7 @@ function formatDurationMinutes(durationMin) {
 
 function formatDurationWithDetail(durationMin) {
   const primary = formatDurationMinutes(durationMin);
-  if (primary === "—") return { primary, secondary: null };
+  if (primary === "-") return { primary, secondary: null };
   const raw =
     durationMin != null && !Number.isNaN(Number(durationMin))
       ? Number(durationMin)
@@ -679,7 +679,7 @@ function LocationAutocomplete({
       {resolved ? (
         <span className="geo-hint geo-hint--accent">
           <CheckCircle2 size={14} strokeWidth={2.5} />
-          Location pinned — Compare routes will use this place.
+          Location pinned - Compare routes will use this place.
         </span>
       ) : null}
     </div>
@@ -956,14 +956,14 @@ export default function App() {
         body: JSON.stringify({ standard, safewalk, same_route: sameRoute }),
       });
       if (!r.ok) {
-        setNarration("Reasoning unavailable — AI service limit reached or an error occurred.");
+        setNarration("Reasoning unavailable - AI service limit reached or an error occurred.");
         return;
       }
       const j = await readJsonResponse(r);
       console.log("narrate response:", j);
-      setNarration(j.text || "Reasoning unavailable — no response from AI.");
+      setNarration(j.text || "Reasoning unavailable - no response from AI.");
     } catch {
-      setNarration("Reasoning unavailable — could not reach the backend.");
+      setNarration("Reasoning unavailable - could not reach the backend.");
     } finally {
       setNarrateBusy(false);
     }
@@ -1158,7 +1158,7 @@ export default function App() {
           {sameRoute ? (
             <div className="same-route-banner">
               <CheckCircle2 size={16} strokeWidth={2.5} />
-              Only one route exists here — this is already the safest path available.
+              Only one route exists here - this is already the safest path available.
             </div>
           ) : null}
 
@@ -1223,11 +1223,11 @@ export default function App() {
                     <span className="route-stat-label">Time</span>
                   </div>
                   <div className="route-stat">
-                    <span className="route-stat-value">{standard ? `${standard.distance_km} km` : "—"}</span>
+                    <span className="route-stat-value">{standard ? `${standard.distance_km} km` : "-"}</span>
                     <span className="route-stat-label">Distance</span>
                   </div>
                   <div className="route-stat">
-                    <span className="route-stat-value">{standard?.safety?.active_business_proximity_hits ?? "—"}</span>
+                    <span className="route-stat-value">{standard?.safety?.active_business_proximity_hits ?? "-"}</span>
                     <span className="route-stat-label">Businesses</span>
                   </div>
                 </div>
@@ -1291,11 +1291,11 @@ export default function App() {
                     <span className="route-stat-label">Time</span>
                   </div>
                   <div className="route-stat">
-                    <span className="route-stat-value">{safewalk ? `${safewalk.distance_km} km` : "—"}</span>
+                    <span className="route-stat-value">{safewalk ? `${safewalk.distance_km} km` : "-"}</span>
                     <span className="route-stat-label">Distance</span>
                   </div>
                   <div className="route-stat">
-                    <span className="route-stat-value">{safewalk?.safety?.active_business_proximity_hits ?? "—"}</span>
+                    <span className="route-stat-value">{safewalk?.safety?.active_business_proximity_hits ?? "-"}</span>
                     <span className="route-stat-label">Businesses</span>
                   </div>
                 </div>
