@@ -764,7 +764,8 @@ export default function App() {
       enriched,
       proj.distanceAlongM,
       totalM,
-      activeWalkRoute?.duration_min || 0
+      activeWalkRoute?.duration_min || 0,
+      proj.crossTrackM
     );
     return {
       ...proj,
