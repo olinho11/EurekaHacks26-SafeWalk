@@ -282,6 +282,18 @@ function openRouteInGoogleMaps(route) {
   window.open(url, "_blank", "noopener,noreferrer");
 }
 
+function haversineM(lat1, lon1, lat2, lon2) {
+  const R = 6371000;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+
 function FitBounds({ lines, enabled = true }) {
   const map = useMap();
   useEffect(() => {
@@ -368,13 +380,56 @@ function ScoreRing({ score, tier, description }) {
   );
 }
 
-function scoreDescription(score, isSafewalk = false) {
-  if (score == null) return null;
-  if (score >= 75) return "Excellent — well-lit streets with lots of open businesses and foot traffic the whole way. Safe to walk at any hour.";
-  if (score >= 55) return "Good — solid lighting and plenty of businesses nearby. Most people would feel comfortable on this route.";
-  if (score >= 35) return "Moderate — some stretches are quieter or darker. Fine during the day; take extra care at night.";
-  if (isSafewalk) return "Low — limited amenities and lighting near this route. This is still the safest available option for this trip.";
-  return "Low — limited lighting and few open businesses along this path. Consider taking the SafeWalk route instead.";
+function comparativeDescription(thisSafety, otherSafety, isSafewalk) {
+  if (!thisSafety || !otherSafety) return null;
+  const scoreDiff = Math.round((thisSafety.score ?? 0) - (otherSafety.score ?? 0));
+  const litDiff = Math.round((thisSafety.lit_coverage_pct ?? 0) - (otherSafety.lit_coverage_pct ?? 0));
+  const bizDiff = (thisSafety.active_business_proximity_hits ?? 0) - (otherSafety.active_business_proximity_hits ?? 0);
+
+  const lines = [];
+
+  if (isSafewalk) {
+    if (scoreDiff > 0) {
+      lines.push(`${scoreDiff} points safer than the fastest route.`);
+    } else if (scoreDiff < 0) {
+      lines.push(`Scores ${Math.abs(scoreDiff)} pts lower than the fastest route — but takes a genuinely different path.`);
+    } else {
+      lines.push("Scores the same as the fastest route — a different path through a similar environment.");
+    }
+  } else {
+    if (scoreDiff < 0) {
+      lines.push(`${Math.abs(scoreDiff)} points less safe than the SafeWalk route.`);
+    } else if (scoreDiff > 0) {
+      lines.push(`${scoreDiff} points safer than the SafeWalk route — the fastest path here is already well-covered.`);
+    } else {
+      lines.push("Scores the same as the SafeWalk route — both paths are similarly safe here.");
+    }
+  }
+
+  if (Math.abs(litDiff) >= 5) {
+    if (litDiff > 0) {
+      lines.push(`${litDiff}% more of this route is on lit streets.`);
+    } else {
+      lines.push(`${Math.abs(litDiff)}% less of this route is on lit streets.`);
+    }
+  }
+
+  if (Math.abs(bizDiff) >= 3) {
+    if (bizDiff > 0) {
+      lines.push(`Passes ${bizDiff} more active businesses.`);
+    } else {
+      lines.push(`Passes ${Math.abs(bizDiff)} fewer active businesses nearby.`);
+    }
+  }
+
+  const iso = thisSafety.isolation_pct ?? 0;
+  if (iso > 30) {
+    lines.push(`${Math.round(iso)}% of this route has no lit road or business within 150 m — exposed stretches.`);
+  } else if (iso === 0) {
+    lines.push("No isolated stretches — always near a business or lit street.");
+  }
+
+  return lines.join(" ");
 }
 
 /** `durationMin` is decimal minutes from the API. */
@@ -628,8 +683,7 @@ export default function App() {
   const [standard, setStandard] = useState(null);
   const [safewalk, setSafewalk] = useState(null);
   const [showOnboarding, setShowOnboarding] = useState(() => {
-    localStorage.removeItem("safewalk_onboarded");
-    return true;
+    return !localStorage.getItem("safewalk_onboarded");
   });
   const [sameRoute, setSameRoute] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -979,7 +1033,7 @@ export default function App() {
             onValueChange={setStartQ}
             resolved={startResolved}
             onResolved={setStartResolved}
-            hint="Type 3+ characters, wait for suggestions, then tap a row to pin. Requires the backend on port 5050."
+            hint="Type 3+ characters, then tap a suggestion to pin your start."
             apiBase={apiBase}
           />
           <LocationAutocomplete
@@ -1109,7 +1163,7 @@ export default function App() {
                     <ScoreRing
                       score={standard?.safety?.score}
                       tier={standard?.safety?.tier}
-                      description={scoreDescription(standard?.safety?.score)}
+                      description={comparativeDescription(standard?.safety, safewalk?.safety, false)}
                     />
                   </div>
                   <div className="route-stats-grid">
@@ -1166,7 +1220,7 @@ export default function App() {
                     <ScoreRing
                       score={safewalk?.safety?.score}
                       tier={safewalk?.safety?.tier}
-                      description={scoreDescription(safewalk?.safety?.score, true)}
+                      description={comparativeDescription(safewalk?.safety, standard?.safety, true)}
                     />
                   </div>
                   <div className="route-stats-grid">
@@ -1434,6 +1488,15 @@ export default function App() {
               {!userPos && !geoError ? (
                 <p className="geo-hint walk-hud-msg">Acquiring GPS…</p>
               ) : null}
+              {userPos && start && (() => {
+                const distToStart = haversineM(userPos.lat, userPos.lng, start.lat, start.lon);
+                return distToStart > 500 ? (
+                  <p className="error walk-hud-msg">
+                    <AlertTriangle size={14} strokeWidth={2.25} style={{ flexShrink: 0 }} />
+                    <span>You're {Math.round(distToStart)} m from the route start. Head to <strong>{start.label || "the starting point"}</strong> first.</span>
+                  </p>
+                ) : null;
+              })()}
               {walkDerived.snapshot ? (
                 <>
                   <div className="walk-hud-next-block">
