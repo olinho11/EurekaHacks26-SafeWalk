@@ -49,8 +49,9 @@ import {
   Heart,
   X,
 } from "lucide-react";
+import confetti from "canvas-confetti";
+import Onboarding from "./Onboarding.jsx";
 import logo from "./assets/logo.png";
-import Onboarding from "./Onboarding";
 
 const APP_VERSION = "1.0.0";
 
@@ -157,7 +158,9 @@ function SettingsModal({ open, onClose, theme, onThemeChange }) {
                   <p>The story behind the app and how it routes you home.</p>
                 </header>
                 <div className="about-block">
-                  <img src={logo} alt="SafeWalk" />
+                  <div className="about-logo-glow" style={{ backgroundColor: THEMES.find(t => t.id === theme)?.color || '#3ee6b0' }}>
+                    <img src={logo} alt="SafeWalk" />
+                  </div>
                   <div className="about-block-text">
                     <div className="about-block-row">
                       <span className="about-block-name">SafeWalk</span>
@@ -400,13 +403,16 @@ function ScoreRing({ score, tier, description }) {
   );
 }
 
-function scoreDescription(score, isSafewalk = false) {
+function scoreDescription(score, isSafewalk = false, otherScore = null) {
   if (score == null) return null;
-  if (score >= 75) return "Excellent — well-lit streets with lots of open businesses and foot traffic the whole way. Safe to walk at any hour.";
-  if (score >= 55) return "Good — solid lighting and plenty of businesses nearby. Most people would feel comfortable on this route.";
-  if (score >= 35) return "Moderate — some stretches are quieter or darker. Fine during the day; take extra care at night.";
-  if (isSafewalk) return "Low — limited amenities and lighting near this route. This is still the safest available option for this trip.";
-  return "Low — limited lighting and few open businesses along this path. Consider taking the SafeWalk route instead.";
+  const comparison = otherScore != null ? score - otherScore : 0;
+  const comparisonText = comparison > 0 ? "safer" : comparison < 0 ? "less safe" : "equally safe";
+  
+  if (score >= 75) return `Excellent — well-lit streets with lots of open businesses and foot traffic the whole way. Safe to walk at any hour.${otherScore != null ? ` This route is ${comparisonText} than the ${isSafewalk ? 'fastest' : 'SafeWalk'} option.` : ''}`;
+  if (score >= 55) return `Good — solid lighting and plenty of businesses nearby. Most people would feel comfortable on this route.${otherScore != null ? ` This route is ${comparisonText} than the ${isSafewalk ? 'fastest' : 'SafeWalk'} option.` : ''}`;
+  if (score >= 35) return `Moderate — some stretches are quieter or darker. Fine during the day; take extra care at night.${otherScore != null ? ` This route is ${comparisonText} than the ${isSafewalk ? 'fastest' : 'SafeWalk'} option.` : ''}`;
+  if (isSafewalk) return `Low — limited amenities and lighting near this route. This is still the safest available option for this trip.${otherScore != null ? ` This route is ${comparisonText} than the fastest option.` : ''}`;
+  return `Low — limited lighting and few open businesses along this path. Consider taking the SafeWalk route instead.${otherScore != null ? ` This route is ${comparisonText} than the SafeWalk option.` : ''}`;
 }
 
 /** `durationMin` is decimal minutes from the API. */
@@ -651,6 +657,7 @@ function LocationAutocomplete({
 }
 
 export default function App() {
+  const apiBase = "";
   const [startQ, setStartQ] = useState("");
   const [endQ, setEndQ] = useState("");
   const [startResolved, setStartResolved] = useState(null);
@@ -660,7 +667,7 @@ export default function App() {
   const [standard, setStandard] = useState(null);
   const [safewalk, setSafewalk] = useState(null);
   const [showOnboarding, setShowOnboarding] = useState(() => {
-    return !localStorage.getItem("safewalk_onboarded");
+    return true; // !localStorage.getItem("safewalk_onboarded");
   });
   const [sameRoute, setSameRoute] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -672,6 +679,7 @@ export default function App() {
   const [pendingReport, setPendingReport] = useState(null);
   const [reportKind, setReportKind] = useState("streetlight");
   const [reportMsg, setReportMsg] = useState("");
+  const [reportSuccess, setReportSuccess] = useState("");
   const [walkMode, setWalkMode] = useState(null);
   const [userPos, setUserPos] = useState(null);
   const [geoError, setGeoError] = useState("");
@@ -679,7 +687,36 @@ export default function App() {
   const [voiceGuidance, setVoiceGuidance] = useState(true);
   const lastSpokenStep = useRef(-1);
 
-  const apiBase = import.meta.env.VITE_API_BASE || "";
+  const haversineDistance = (lat1, lon1, lat2, lon2) => {
+    const R = 6371000; // Earth's radius in meters
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
+
+  const startWalk = (mode) => {
+    const route = mode === "safewalk" ? safewalk : standard;
+    if (!route?.geometry?.length) return;
+    
+    const startLat = route.geometry[0][1];
+    const startLon = route.geometry[0][0];
+    
+    if (userPos) {
+      const distance = haversineDistance(userPos.lat, userPos.lng, startLat, startLon);
+      if (distance > 100) { // 100 meters
+        alert("You have to be at the location to start walking. Please go to the starting point.");
+        return;
+      }
+    }
+    
+    setWalkMode(mode);
+    setFollowUser(true);
+    setReportMode(false);
+  };
 
   const activeWalkRoute =
     walkMode === "safewalk"
@@ -948,6 +985,15 @@ export default function App() {
     setReportMsg("");
     setReportMode(false);
     loadReports();
+    // Show success message and confetti
+    setReportSuccess("Thank you for helping keep our community safe! Your report has been submitted.");
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 }
+    });
+    // Clear success message after 5 seconds
+    setTimeout(() => setReportSuccess(""), 5000);
   };
 
 
@@ -1010,7 +1056,7 @@ export default function App() {
           onValueChange={setStartQ}
           resolved={startResolved}
           onResolved={setStartResolved}
-          hint="Type 3+ characters, wait for suggestions, then tap a row to pin. Requires the backend on port 5050."
+          hint="Type 3+ characters, wait for suggestions, then tap a row to pin."
           apiBase={apiBase}
         />
         <LocationAutocomplete
@@ -1146,7 +1192,7 @@ export default function App() {
                   <ScoreRing
                     score={standard?.safety?.score}
                     tier={standard?.safety?.tier}
-                    description={scoreDescription(standard?.safety?.score)}
+                    description={scoreDescription(standard?.safety?.score, false, safewalk?.safety?.score)}
                   />
                 </div>
                 <div className="route-stats-grid">
@@ -1170,7 +1216,7 @@ export default function App() {
                     className="btn-walk"
                     type="button"
                     disabled={!standard?.steps?.length}
-                    onClick={() => { setWalkMode("standard"); setFollowUser(true); setReportMode(false); }}
+                    onClick={() => startWalk("standard")}
                   >
                     <Footprints size={14} strokeWidth={2.25} />
                     Walk here
@@ -1214,7 +1260,7 @@ export default function App() {
                   <ScoreRing
                     score={safewalk?.safety?.score}
                     tier={safewalk?.safety?.tier}
-                    description={scoreDescription(safewalk?.safety?.score, true)}
+                    description={scoreDescription(safewalk?.safety?.score, true, standard?.safety?.score)}
                   />
                 </div>
                 <div className="route-stats-grid">
@@ -1238,7 +1284,7 @@ export default function App() {
                     className="btn-walk"
                     type="button"
                     disabled={!safewalk?.steps?.length}
-                    onClick={() => { setWalkMode("safewalk"); setFollowUser(true); setReportMode(false); }}
+                    onClick={() => startWalk("safewalk")}
                   >
                     <Footprints size={14} strokeWidth={2.25} />
                     Walk here
@@ -1337,6 +1383,12 @@ export default function App() {
                   Discard
                 </button>
               </div>
+            </div>
+          ) : null}
+          {reportSuccess ? (
+            <div className="success-message">
+              <CheckCircle2 size={16} strokeWidth={2.25} />
+              {reportSuccess}
             </div>
           ) : null}
         </div>

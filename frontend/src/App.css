@@ -20,6 +20,10 @@
   --warn-dim: rgba(240, 180, 41, 0.12);
   --blue-user: #6eb7ff;
   --blue-user-core: #1e5eff;
+  --success: #38d39f;
+  --success-bg: rgba(56, 211, 159, 0.12);
+  --success-border: rgba(56, 211, 159, 0.3);
+  --success-text: #38d39f;
 
   /* ── Spacing — strict 4px grid ── */
   --sp-1: 0.25rem;   /*  4px */
@@ -790,6 +794,25 @@ button:active:not(:disabled) {
 
 .report-form .actions-row { margin-top: var(--sp-1); }
 
+/* ── Success Message ─────────────────────────────────── */
+.success-message {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+  background: var(--success-bg);
+  border: 1px solid var(--success-border);
+  border-radius: var(--r-sm);
+  color: var(--success-text);
+  font-weight: 500;
+  animation: fade-in 0.3s ease-out;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 /* ── Map ─────────────────────────────────────────────── */
 .map-wrap {
   position: relative;
@@ -1454,6 +1477,33 @@ button:active:not(:disabled) {
   border-radius: var(--r-sm);
   flex-shrink: 0;
   filter: drop-shadow(0 4px 14px rgba(255, 200, 60, 0.22));
+}
+
+.about-logo-glow {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 20px currentColor, 0 0 40px currentColor;
+  animation: glow-pulse 2s ease-in-out infinite alternate;
+  flex-shrink: 0;
+}
+
+.about-logo-glow img {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+}
+
+@keyframes glow-pulse {
+  from {
+    box-shadow: 0 0 20px currentColor, 0 0 40px currentColor;
+  }
+  to {
+    box-shadow: 0 0 30px currentColor, 0 0 60px currentColor;
+  }
 }
 
 .about-block-text {
