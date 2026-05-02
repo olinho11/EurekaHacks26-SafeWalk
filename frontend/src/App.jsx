@@ -697,7 +697,7 @@ export default function App() {
   const [standard, setStandard] = useState(null);
   const [safewalk, setSafewalk] = useState(null);
   const [showOnboarding, setShowOnboarding] = useState(() => {
-    return true; // !localStorage.getItem("safewalk_onboarded");
+    return !localStorage.getItem("safewalk_onboarded");
   });
   const [sameRoute, setSameRoute] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -711,38 +711,17 @@ export default function App() {
   const [reportMsg, setReportMsg] = useState("");
   const [reportSuccess, setReportSuccess] = useState("");
   const [walkMode, setWalkMode] = useState(null);
+  const [walkDistError, setWalkDistError] = useState("");
   const [userPos, setUserPos] = useState(null);
   const [geoError, setGeoError] = useState("");
   const [followUser, setFollowUser] = useState(true);
   const [voiceGuidance, setVoiceGuidance] = useState(true);
   const lastSpokenStep = useRef(-1);
 
-  const haversineDistance = (lat1, lon1, lat2, lon2) => {
-    const R = 6371000; // Earth's radius in meters
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-      Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
-  };
-
   const startWalk = (mode) => {
     const route = mode === "safewalk" ? safewalk : standard;
     if (!route?.geometry?.length) return;
-    
-    const startLat = route.geometry[0][1];
-    const startLon = route.geometry[0][0];
-    
-    if (userPos) {
-      const distance = haversineDistance(userPos.lat, userPos.lng, startLat, startLon);
-      if (distance > 100) { // 100 meters
-        alert("You have to be at the location to start walking. Please go to the starting point.");
-        return;
-      }
-    }
-    
+    setWalkDistError("");
     setWalkMode(mode);
     setFollowUser(true);
     setReportMode(false);
@@ -1157,6 +1136,12 @@ export default function App() {
           <p className="error">
             <AlertTriangle size={16} strokeWidth={2.25} style={{ flexShrink: 0, marginTop: 2 }} />
             <span>{error}</span>
+          </p>
+        ) : null}
+        {walkDistError ? (
+          <p className="error">
+            <AlertTriangle size={16} strokeWidth={2.25} style={{ flexShrink: 0, marginTop: 2 }} />
+            <span>{walkDistError}</span>
           </p>
         ) : null}
         {safewalk?.geometry?.length && !error ? (

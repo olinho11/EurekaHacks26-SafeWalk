@@ -128,6 +128,11 @@ const Onboarding = ({ onComplete }) => {
             {step === steps.length - 1 ? "Start Walking" : "Continue"}
             <ChevronRight size={18} />
           </button>
+          {step < steps.length - 1 && (
+            <button className="btn-onboarding-skip" onClick={onComplete}>
+              Skip
+            </button>
+          )}
         </div>
       </div>
     </div>

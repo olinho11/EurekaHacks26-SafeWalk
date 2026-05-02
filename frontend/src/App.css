@@ -1,5 +1,5 @@
-:root {
-  /* ── Color tokens ── */
+﻿:root {
+  /* â”€â”€ Color tokens â”€â”€ */
   --bg: #07090e;
   --panel: #0d1117;
   --panel-raised: #131b25;
@@ -9,9 +9,10 @@
   --text: #e6ecf5;
   --text-secondary: #a0b4cc;
   --muted: #6b7e99;
-  --accent: #3ee6b0;
-  --accent-dim: rgba(62, 230, 176, 0.12);
-  --accent-glow: rgba(62, 230, 176, 0.25);
+  --accent-rgb: 62, 230, 176;
+  --accent: rgb(var(--accent-rgb));
+  --accent-dim: rgba(var(--accent-rgb), 0.12);
+  --accent-glow: rgba(var(--accent-rgb), 0.25);
   --danger: #ff5c6c;
   --danger-dim: rgba(255, 92, 108, 0.12);
   --safe: #38d39f;
@@ -25,7 +26,7 @@
   --success-border: rgba(56, 211, 159, 0.3);
   --success-text: #38d39f;
 
-  /* ── Spacing — strict 4px grid ── */
+  /* â”€â”€ Spacing â€” strict 4px grid â”€â”€ */
   --sp-1: 0.25rem;   /*  4px */
   --sp-2: 0.5rem;    /*  8px */
   --sp-3: 0.75rem;   /* 12px */
@@ -35,19 +36,19 @@
   --sp-8: 2rem;      /* 32px */
   --sp-12: 3rem;     /* 48px */
 
-  /* ── Radius — 2 values + pill ── */
+  /* â”€â”€ Radius â€” 2 values + pill â”€â”€ */
   --r-sm: 8px;
   --r-lg: 16px;
   --r-pill: 999px;
 
-  /* ── Typography — 5 steps ── */
+  /* â”€â”€ Typography â€” 5 steps â”€â”€ */
   --text-xs: 0.75rem;
   --text-sm: 0.875rem;
   --text-base: 1rem;
   --text-lg: 1.125rem;
   --text-xl: 1.875rem;
 
-  /* ── Weights ── */
+  /* â”€â”€ Weights â”€â”€ */
   --fw-normal: 400;
   --fw-semi: 600;
   --fw-bold: 700;
@@ -66,15 +67,12 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ── Layout ─────────────────────────────────────────── */
+/* â”€â”€ Layout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .app-shell {
   display: grid;
   grid-template-columns: 460px 1fr;
-
-  height: 100vh;      /* Lock to viewport height */
-  overflow: hidden;    /* Prevent whole-page scrolling */
-  height: 100vh;      /* Lock to viewport height */
-  overflow: hidden;    /* Prevent whole-page scrolling */
+  height: 100vh;
+  overflow: hidden;
 }
 
 @media (max-width: 960px) {
@@ -101,7 +99,7 @@ body {
   scrollbar-color: var(--border) transparent;
 }
 
-/* ── Brand ───────────────────────────────────────────── */
+/* â”€â”€ Brand â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .brand {
   display: flex;
   flex-direction: column;
@@ -161,7 +159,7 @@ body {
   font-weight: var(--fw-bold);
 }
 
-/* ── Inputs ──────────────────────────────────────────── */
+/* â”€â”€ Inputs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .inputs-section {
   display: flex;
   flex-direction: column;
@@ -283,7 +281,7 @@ body {
   font-weight: var(--fw-semi);
 }
 
-/* ── Action Buttons ──────────────────────────────────── */
+/* â”€â”€ Action Buttons â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .actions {
   display: flex;
   flex-direction: column;
@@ -368,7 +366,7 @@ button:active:not(:disabled) {
   line-height: 1.5;
 }
 
-/* ── Route Cards ─────────────────────────────────────── */
+/* â”€â”€ Route Cards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .route-cards {
   display: flex;
   flex-direction: column;
@@ -474,7 +472,7 @@ button:active:not(:disabled) {
   letter-spacing: 0.02em;
 }
 
-/* ── Score Ring ──────────────────────────────────────── */
+/* â”€â”€ Score Ring â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .score-ring-wrap {
   position: relative;
   width: 60px;
@@ -526,7 +524,7 @@ button:active:not(:disabled) {
   transform: translateY(0);
 }
 
-/* ── Route Stats ─────────────────────────────────────── */
+/* â”€â”€ Route Stats â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .route-stats-grid {
   display: grid;
   grid-template-columns: 2fr 1.5fr 1.5fr;
@@ -680,7 +678,7 @@ button:active:not(:disabled) {
   padding: var(--sp-1) 0;
 }
 
-/* ── Pill ────────────────────────────────────────────── */
+/* â”€â”€ Pill â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .pill {
   font-size: 0.6875rem;
   padding: var(--sp-1) var(--sp-2);
@@ -695,7 +693,7 @@ button:active:not(:disabled) {
 .pill.green { background: rgba(56, 211, 159, 0.18); color: #8cf5d1; }
 .pill.amber { background: rgba(240, 180, 41, 0.15); color: #ffd875; }
 
-/* ── Duration ────────────────────────────────────────── */
+/* â”€â”€ Duration â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .duration-block {
   display: flex;
   flex-direction: column;
@@ -705,7 +703,7 @@ button:active:not(:disabled) {
 .duration-primary { font-weight: var(--fw-bold); color: var(--text); }
 .duration-secondary { font-size: var(--text-xs); color: var(--muted); font-weight: var(--fw-normal); }
 
-/* ── Narration ───────────────────────────────────────── */
+/* â”€â”€ Narration â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .narration {
   border-radius: var(--r-lg);
   padding: var(--sp-4);
@@ -742,7 +740,7 @@ button:active:not(:disabled) {
 
 .narration-header svg { flex-shrink: 0; }
 
-/* ── Report Form ─────────────────────────────────────── */
+/* â”€â”€ Report Form â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .report-section {
   border-top: 1px solid var(--border);
   padding-top: var(--sp-4);
@@ -794,7 +792,7 @@ button:active:not(:disabled) {
 
 .report-form .actions-row { margin-top: var(--sp-1); }
 
-/* ── Success Message ─────────────────────────────────── */
+/* â”€â”€ Success Message â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .success-message {
   display: flex;
   align-items: center;
@@ -813,7 +811,7 @@ button:active:not(:disabled) {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* ── Map ─────────────────────────────────────────────── */
+/* â”€â”€ Map â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .map-wrap {
   position: relative;
   min-height: 280px;
@@ -838,7 +836,7 @@ button:active:not(:disabled) {
 
 .leaflet-popup-content { font-family: inherit; font-size: var(--text-sm); margin: var(--sp-3); }
 
-/* ── Walk HUD ────────────────────────────────────────── */
+/* â”€â”€ Walk HUD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .walk-hud {
   position: absolute;
   left: var(--sp-3); right: var(--sp-3); bottom: var(--sp-3);
@@ -1036,7 +1034,7 @@ button:active:not(:disabled) {
   font-size: var(--text-xs);
 }
 
-/* ── Hint banner ─────────────────────────────────────── */
+/* â”€â”€ Hint banner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .maps-auto-hint {
   font-size: var(--text-sm);
   line-height: 1.5;
@@ -1048,7 +1046,7 @@ button:active:not(:disabled) {
   font-weight: var(--fw-semi);
 }
 
-/* ── Skeleton Loaders ────────────────────────────────── */
+/* â”€â”€ Skeleton Loaders â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @keyframes shimmer {
   0%   { background-position: -400px 0; }
   100% { background-position:  400px 0; }
@@ -1102,7 +1100,7 @@ button:active:not(:disabled) {
 }
 .skel-stat { height: 36px; }
 
-/* ── Animations ──────────────────────────────────────── */
+/* â”€â”€ Animations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @keyframes fadeSlideIn {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -1118,7 +1116,7 @@ button:active:not(:disabled) {
   50% { opacity: 0.5; }
 }
 
-/* ── Scrollbar ───────────────────────────────────────── */
+/* â”€â”€ Scrollbar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .side-panel::-webkit-scrollbar,
 .turn-list ol::-webkit-scrollbar,
 .autocomplete-dropdown::-webkit-scrollbar {
@@ -1138,19 +1136,20 @@ button:active:not(:disabled) {
   background: var(--muted);
 }
 
-/* ── Selection ───────────────────────────────────────── */
+/* â”€â”€ Selection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 ::selection {
   background: var(--accent-dim);
   color: var(--accent);
 }
 
-/* ── Theme Variants ──────────────────────────────────── */
+/* â”€â”€ Theme Variants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+[data-theme="teal"]   { --accent-rgb: 62, 230, 176; }
 [data-theme="amber"]  { --accent-rgb: 240, 195, 80; }
 [data-theme="blue"]   { --accent-rgb: 110, 165, 255; }
 [data-theme="purple"] { --accent-rgb: 176, 124, 255; }
 [data-theme="rose"]   { --accent-rgb: 255, 130, 165; }
 
-/* ── Settings Button (in brand header) ───────────────── */
+/* â”€â”€ Settings Button (in brand header) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .brand-actions {
   margin-left: auto;
   display: flex;
@@ -1200,7 +1199,7 @@ button:active:not(:disabled) {
   transform: rotate(30deg);
 }
 
-/* ── Modal (base) ─────────────────────────────────────── */
+/* â”€â”€ Modal (base) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -1298,7 +1297,7 @@ button:active:not(:disabled) {
   transform: rotate(90deg);
 }
 
-/* ── Settings Layout (sidebar + panel) ───────────────── */
+/* â”€â”€ Settings Layout (sidebar + panel) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .settings-layout {
   display: grid;
   grid-template-columns: 200px 1fr;
@@ -1387,7 +1386,7 @@ button:active:not(:disabled) {
   justify-content: center;
 }
 
-/* ── Settings Panel (right side content) ─────────────── */
+/* â”€â”€ Settings Panel (right side content) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .settings-panel {
   padding: var(--sp-6);
   overflow-y: auto;
@@ -1460,7 +1459,33 @@ button:active:not(:disabled) {
   .settings-nav-footer { display: none; }
 }
 
-/* ── About block ─────────────────────────────────────── */
+/* â”€â”€ Settings Nav Buttons â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.settings-nav-btn {
+  width: 100%;
+  justify-content: flex-start;
+  padding: var(--sp-3) var(--sp-4);
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  border-radius: var(--r-sm);
+  font-size: var(--text-sm);
+  font-weight: var(--fw-semi);
+  font-family: inherit;
+  gap: var(--sp-2);
+  transition: background 0.15s, color 0.15s;
+}
+
+.settings-nav-btn:hover {
+  background: var(--panel-raised);
+  color: var(--text);
+}
+
+.settings-nav-btn.active {
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+
+/* â”€â”€ About block â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .about-block {
   display: flex;
   align-items: center;
@@ -1550,7 +1575,7 @@ button:active:not(:disabled) {
   line-height: 1.4;
 }
 
-/* ── Theme List (vertical rows) ──────────────────────── */
+/* â”€â”€ Theme List (vertical rows) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .theme-list {
   display: flex;
   flex-direction: column;
@@ -1636,7 +1661,7 @@ button:active:not(:disabled) {
   flex-shrink: 0;
 }
 
-/* ── Tech list ───────────────────────────────────────── */
+/* â”€â”€ Tech list â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .tech-list {
   display: flex;
   flex-wrap: wrap;
@@ -1661,7 +1686,7 @@ button:active:not(:disabled) {
   transform: translateY(-1px);
 }
 
-/* ── Onboarding ─────────────────────────────────────── */
+/* â”€â”€ Onboarding â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .onb-overlay,
 .onboarding-overlay {
   position: fixed;
@@ -1860,6 +1885,23 @@ button:active:not(:disabled) {
   box-shadow: 0 0 30px var(--accent);
 }
 
+.btn-onboarding-skip {
+  display: block;
+  width: 100%;
+  margin-top: var(--sp-3);
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  font-weight: var(--fw-semi);
+  padding: var(--sp-2);
+  transition: color 0.15s;
+}
+
+.btn-onboarding-skip:hover {
+  color: var(--text-secondary);
+}
+
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -1870,7 +1912,7 @@ button:active:not(:disabled) {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* ── Onboarding Intro Animation ── */
+/* â”€â”€ Onboarding Intro Animation â”€â”€ */
 .onboarding-intro {
   display: flex;
   flex-direction: column;
@@ -1957,271 +1999,13 @@ button:active:not(:disabled) {
   line-height: 1;
   background: linear-gradient(180deg, #fff 0%, var(--accent) 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
   filter: drop-shadow(0 0 20px var(--accent-glow));
 }
 
-/* ── Settings Trigger ── */
-.btn-settings-trigger {
-  margin-left: auto;
-  width: 40px;
-  height: 40px;
-  border-radius: var(--r-sm);
-  background: var(--panel-raised);
-  border: 1px solid var(--border);
-  color: var(--muted);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-}
 
-.btn-settings-trigger:hover {
-  background: var(--panel-hover);
-  color: var(--accent);
-  border-color: var(--accent-glow);
-}
-
-/* ── Modals ── */
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 10001;
-  background: rgba(7, 9, 14, 0.85);
-  backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--sp-4);
-  animation: fadeIn 0.2s ease;
-}
-
-.modal-settings {
-  width: 100%;
-  max-width: 800px;
-  height: 600px;
-  background: var(--panel);
-  border: 1px solid var(--border-light);
-  border-radius: var(--r-lg);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.7);
-}
-
-.modal-header {
-  padding: var(--sp-6) var(--sp-8);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.modal-title h2 {
-  font-size: var(--text-lg);
-  font-weight: var(--fw-black);
-  letter-spacing: -0.02em;
-}
-
-.modal-subtitle {
-  font-size: var(--text-sm);
-  color: var(--muted);
-  margin-top: 2px;
-}
-
-.modal-close {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--r-sm);
-  background: var(--panel-raised);
-  border: 1px solid var(--border);
-  color: var(--muted);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-}
-
-.modal-close:hover {
-  background: var(--danger-dim);
-  color: var(--danger);
-}
-
-.settings-layout {
-  flex: 1;
-  display: grid;
-  grid-template-columns: 200px 1fr;
-  overflow: hidden;
-}
-
-.settings-nav {
-  padding: var(--sp-4);
-  background: rgba(0, 0, 0, 0.15);
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.settings-nav-btn {
-  width: 100%;
-  justify-content: flex-start;
-  padding: var(--sp-3) var(--sp-4);
-  background: transparent;
-  color: var(--muted);
-  border-radius: var(--r-sm);
-  font-size: var(--text-sm);
-  font-weight: var(--fw-semi);
-  transition: all 0.2s;
-}
-
-.settings-nav-btn.active {
-  background: var(--accent-dim);
-  color: var(--accent);
-}
-
-.settings-panel {
-  padding: var(--sp-8);
-  overflow-y: auto;
-}
-
-.settings-pane-header {
-  margin-bottom: var(--sp-6);
-}
-
-.settings-pane-header h3 {
-  font-size: var(--text-base);
-  font-weight: var(--fw-bold);
-  margin-bottom: 4px;
-}
-
-.settings-pane-header p {
-  font-size: var(--text-sm);
-  color: var(--muted);
-  line-height: 1.5;
-}
-
-.theme-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.theme-row {
-  width: 100%;
-  justify-content: flex-start;
-  background: var(--panel-raised);
-  border: 1.5px solid var(--border);
-  padding: var(--sp-4);
-  transition: all 0.2s;
-}
-
-.theme-row.active {
-  border-color: var(--accent);
-  background: var(--panel-hover);
-}
-
-.theme-row-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  margin-right: var(--sp-4);
-  box-shadow: 0 0 10px currentColor;
-}
-
-.theme-row-text {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-.theme-row-name {
-  font-weight: var(--fw-bold);
-  color: var(--text);
-}
-
-.theme-row-meta {
-  font-size: var(--text-xs);
-  color: var(--muted);
-}
-
-.theme-row-check {
-  color: var(--accent);
-}
-
-/* ── About Block ── */
-.about-block {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-4);
-  background: var(--panel-raised);
-  padding: var(--sp-4);
-  border-radius: var(--r-sm);
-  margin-bottom: var(--sp-6);
-  border: 1px solid var(--border);
-}
-
-.about-block img {
-  width: 48px;
-  height: 48px;
-  object-fit: contain;
-}
-
-.about-block-row {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-}
-
-.about-block-name {
-  font-weight: var(--fw-black);
-  font-size: var(--text-base);
-}
-
-.app-version {
-  font-size: var(--text-xs);
-  color: var(--muted);
-  background: var(--border);
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-
-.about-block-tag {
-  font-size: var(--text-xs);
-  color: var(--accent);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-}
-
-.tech-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.tech-tag {
-  padding: 4px 10px;
-  background: var(--panel-raised);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  font-size: var(--text-xs);
-  color: var(--text-secondary);
-}
-
-[data-theme="teal"]   { --accent-rgb: 62, 230, 176; }
-[data-theme="amber"]  { --accent-rgb: 240, 195, 80; }
-[data-theme="blue"]   { --accent-rgb: 110, 165, 255; }
-[data-theme="purple"] { --accent-rgb: 176, 124, 255; }
-[data-theme="rose"]   { --accent-rgb: 255, 130, 165; }
-
-:root {
-  --accent: rgb(var(--accent-rgb));
-  --accent-dim: rgba(var(--accent-rgb), 0.12);
-  --accent-glow: rgba(var(--accent-rgb), 0.25);
-}
-
-/* ── Try Demo Glow ───────────────────────────────────── */
+/* â”€â”€ Try Demo Glow â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @keyframes demoGlow {
   0% { box-shadow: 0 0 0px var(--accent-glow); }
   50% { box-shadow: 0 0 15px var(--accent), 0 0 30px var(--accent-glow); border-color: var(--accent); }
