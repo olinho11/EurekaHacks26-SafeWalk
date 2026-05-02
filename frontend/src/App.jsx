@@ -708,6 +708,7 @@ export default function App() {
   const [reportKind, setReportKind] = useState("streetlight");
   const [reportMsg, setReportMsg] = useState("");
   const [reportSuccess, setReportSuccess] = useState("");
+  const [routesFetched, setRoutesFetched] = useState(false);
   const [walkMode, setWalkMode] = useState(null);
   const [walkDistError, setWalkDistError] = useState("");
   const [userPos, setUserPos] = useState(null);
@@ -716,6 +717,9 @@ export default function App() {
   const [voiceGuidance, setVoiceGuidance] = useState(true);
   const lastSpokenStep = useRef(-1);
   const narrationRef = useRef(null);
+
+  // Unlock "Compare routes" whenever either address field changes
+  useEffect(() => { setRoutesFetched(false); }, [startQ, endQ]);
 
   const startWalk = (mode) => {
     const route = mode === "safewalk" ? safewalk : standard;
@@ -856,6 +860,7 @@ export default function App() {
       setStandard(j.standard);
       setSafewalk(j.safewalk);
       setSameRoute(j.same_route || false);
+      setRoutesFetched(true);
     } catch (err) {
       setStandard(null);
       setSafewalk(null);
@@ -927,6 +932,7 @@ export default function App() {
       setStandard(j.standard);
       setSafewalk(j.safewalk);
       setSameRoute(j.same_route || false);
+      setRoutesFetched(true);
     } catch (err) {
       setStandard(null);
       setSafewalk(null);
@@ -1087,11 +1093,16 @@ export default function App() {
           <button
             className="btn-primary"
             type="button"
-            disabled={loading}
+            disabled={loading || routesFetched}
             onClick={fetchRoutes}
           >
             {loading ? (
               "Routing…"
+            ) : routesFetched ? (
+              <>
+                <Navigation size={16} strokeWidth={2.5} />
+                Change address to search again
+              </>
             ) : (
               <>
                 <Navigation size={16} strokeWidth={2.5} />
