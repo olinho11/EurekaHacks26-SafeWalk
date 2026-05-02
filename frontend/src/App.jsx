@@ -368,6 +368,14 @@ function tierNumColor(tier) {
   return "#ff8f99";
 }
 
+function haversineM(lat1, lon1, lat2, lon2) {
+  const R = 6371000;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 function ScoreRing({ score, tier, description }) {
   const C = 138.23;
   const fill = score != null ? (score / 100) * C : 0;
@@ -403,16 +411,38 @@ function ScoreRing({ score, tier, description }) {
   );
 }
 
-function scoreDescription(score, isSafewalk = false, otherScore = null) {
+function scoreDescription(thisSafety, otherSafety, isSafewalk = false) {
+  if (!thisSafety) return null;
+  const score = thisSafety.score;
   if (score == null) return null;
-  const comparison = otherScore != null ? score - otherScore : 0;
-  const comparisonText = comparison > 0 ? "safer" : comparison < 0 ? "less safe" : "equally safe";
-  
-  if (score >= 75) return `Excellent — well-lit streets with lots of open businesses and foot traffic the whole way. Safe to walk at any hour.${otherScore != null ? ` This route is ${comparisonText} than the ${isSafewalk ? 'fastest' : 'SafeWalk'} option.` : ''}`;
-  if (score >= 55) return `Good — solid lighting and plenty of businesses nearby. Most people would feel comfortable on this route.${otherScore != null ? ` This route is ${comparisonText} than the ${isSafewalk ? 'fastest' : 'SafeWalk'} option.` : ''}`;
-  if (score >= 35) return `Moderate — some stretches are quieter or darker. Fine during the day; take extra care at night.${otherScore != null ? ` This route is ${comparisonText} than the ${isSafewalk ? 'fastest' : 'SafeWalk'} option.` : ''}`;
-  if (isSafewalk) return `Low — limited amenities and lighting near this route. This is still the safest available option for this trip.${otherScore != null ? ` This route is ${comparisonText} than the fastest option.` : ''}`;
-  return `Low — limited lighting and few open businesses along this path. Consider taking the SafeWalk route instead.${otherScore != null ? ` This route is ${comparisonText} than the SafeWalk option.` : ''}`;
+  const otherScore = otherSafety?.score;
+  const litPct = Math.round(thisSafety.lit_coverage_pct ?? 0);
+  const businesses = thisSafety.active_business_proximity_hits ?? 0;
+  const otherLit = Math.round(otherSafety?.lit_coverage_pct ?? 0);
+  const otherBiz = otherSafety?.active_business_proximity_hits ?? 0;
+  const otherName = isSafewalk ? "fastest route" : "SafeWalk route";
+
+  const parts = [];
+  if (otherScore != null) {
+    const diff = Math.round(Math.abs(score - otherScore));
+    if (diff === 0) parts.push(`Same score as the ${otherName}.`);
+    else if (score > otherScore) parts.push(`${diff} pts safer than the ${otherName}.`);
+    else parts.push(`${diff} pts less safe than the ${otherName}.`);
+  }
+
+  if (litPct > 0) parts.push(`${litPct}% lit road coverage`);
+  if (businesses > 0) parts.push(`${businesses} active ${businesses === 1 ? "business" : "businesses"} nearby`);
+
+  if (otherSafety) {
+    const litDiff = litPct - otherLit;
+    const bizDiff = businesses - otherBiz;
+    const changes = [];
+    if (Math.abs(litDiff) >= 5) changes.push(`${Math.abs(litDiff)}% ${litDiff > 0 ? "more" : "less"} lit`);
+    if (Math.abs(bizDiff) >= 1) changes.push(`${Math.abs(bizDiff)} ${bizDiff > 0 ? "more" : "fewer"} businesses`);
+    if (changes.length) parts.push(changes.join(", "));
+  }
+
+  return parts.join(" · ") || null;
 }
 
 /** `durationMin` is decimal minutes from the API. */
@@ -946,10 +976,14 @@ export default function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ standard, safewalk, same_route: sameRoute }),
       });
+      if (!r.ok) {
+        setNarration("Reasoning unavailable — AI service limit reached or an error occurred.");
+        return;
+      }
       const j = await readJsonResponse(r);
-      setNarration(j.text || "");
+      setNarration(j.text || "Reasoning unavailable — no response from AI.");
     } catch {
-      setNarration("SafeWalk could not reach the narration service.");
+      setNarration("Reasoning unavailable — could not reach the backend.");
     } finally {
       setNarrateBusy(false);
     }
@@ -1192,7 +1226,7 @@ export default function App() {
                   <ScoreRing
                     score={standard?.safety?.score}
                     tier={standard?.safety?.tier}
-                    description={scoreDescription(standard?.safety?.score, false, safewalk?.safety?.score)}
+                    description={scoreDescription(standard?.safety, safewalk?.safety, false)}
                   />
                 </div>
                 <div className="route-stats-grid">
@@ -1260,7 +1294,7 @@ export default function App() {
                   <ScoreRing
                     score={safewalk?.safety?.score}
                     tier={safewalk?.safety?.tier}
-                    description={scoreDescription(safewalk?.safety?.score, true, standard?.safety?.score)}
+                    description={scoreDescription(safewalk?.safety, standard?.safety, true)}
                   />
                 </div>
                 <div className="route-stats-grid">
@@ -1545,6 +1579,15 @@ export default function App() {
             {!userPos && !geoError ? (
               <p className="geo-hint walk-hud-msg">Acquiring GPS…</p>
             ) : null}
+            {userPos && start && (() => {
+              const d = haversineM(userPos.lat, userPos.lng, start.lat, start.lon);
+              return d > 500 ? (
+                <p className="error walk-hud-msg">
+                  <AlertTriangle size={14} strokeWidth={2.25} style={{ flexShrink: 0 }} />
+                  <span>You're {Math.round(d)} m from the route start. Head to <strong>{start.label || "the start"}</strong> first.</span>
+                </p>
+              ) : null;
+            })()}
             {walkDerived.snapshot ? (
               <>
                 <div className="walk-hud-next-block">
