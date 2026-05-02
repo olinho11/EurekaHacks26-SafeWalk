@@ -47,62 +47,89 @@ def geocode_q():
 @app.post("/api/narrate")
 def narrate():
     body = request.get_json(force=True, silent=True) or {}
-    standard = body.get("standard")
-    safewalk = body.get("safewalk")
-    hf_token = os.environ.get("HF_TOKEN")
+    standard = body.get("standard") or {}
+    safewalk = body.get("safewalk") or {}
+    same = body.get("same_route", False)
 
-    def fallback() -> str:
-        same = body.get("same_route", False)
-        safe_s = (safewalk or {}).get("safety", {}).get("score", "?")
-        std_s = (standard or {}).get("safety", {}).get("score", "?")
-        dm = (safewalk or {}).get("duration_min", "?")
+    def smart_summary() -> str:
+        safe_safety = safewalk.get("safety", {})
+        std_safety  = standard.get("safety", {})
+
+        safe_s   = safe_safety.get("score")
+        std_s    = std_safety.get("score")
+        safe_lit = safe_safety.get("lit_coverage_pct")
+        std_lit  = std_safety.get("lit_coverage_pct")
+        safe_biz = safe_safety.get("active_business_proximity_hits")
+        std_biz  = std_safety.get("active_business_proximity_hits")
+        safe_iso = safe_safety.get("isolation_pct")
+        safe_dm  = safewalk.get("duration_min")
+        std_dm   = standard.get("duration_min")
+
+        def fmt_min(m):
+            if m is None:
+                return "a few"
+            m = round(float(m))
+            return str(m) if m > 0 else "less than 1"
+
         if same:
+            lit_note = f" {round(safe_lit)}% of the route is lit." if safe_lit is not None else ""
+            biz_note = f" There are {safe_biz} active businesses nearby." if safe_biz is not None else ""
             return (
-                f"There's only one viable route for this trip, scoring {safe_s}/100 "
-                f"on our lighting and foot-traffic model. "
-                f"It takes about {dm} minutes. Stay on well-lit sections and keep your route visible to others."
+                f"Only one route exists for this trip, scoring {round(safe_s) if safe_s else '?'}/100.{lit_note}{biz_note} "
+                f"It takes about {fmt_min(safe_dm)} minutes. Stay visible and keep to well-lit stretches."
             )
-        if safe_s == std_s:
-            return (
-                f"Both routes score similarly ({safe_s}/100) — the area has consistent "
-                f"lighting and business density along both paths. "
-                f"The SafeWalk route is slightly preferred. Walk takes about {dm} minutes."
+
+        score_gap = round(safe_s - std_s) if (safe_s is not None and std_s is not None) else None
+        lit_gap   = round(safe_lit - std_lit) if (safe_lit is not None and std_lit is not None) else None
+        biz_gap   = (safe_biz or 0) - (std_biz or 0)
+        extra_min = round(float(safe_dm) - float(std_dm)) if (safe_dm is not None and std_dm is not None) else None
+
+        lines = []
+
+        # Opening — score comparison
+        if score_gap is not None and score_gap > 0:
+            lines.append(
+                f"SafeWalk chose the {round(safe_s)}/100 route over the faster {round(std_s)}/100 option — "
+                f"a {score_gap}-point safety advantage."
             )
-        return (
-            f"SafeWalk chose the route scoring {safe_s}/100 over the faster option at {std_s}/100. "
-            f"The difference comes down to more open businesses and better-lit streets along the SafeWalk path. "
-            f"About {dm} minutes."
-        )
+        elif score_gap == 0:
+            lines.append(f"Both routes score {round(safe_s)}/100 — the area has consistent lighting and activity.")
+        else:
+            lines.append(f"The routes score similarly ({round(safe_s) if safe_s else '?'} vs {round(std_s) if std_s else '?'}/100).")
 
-    if not hf_token:
-        return jsonify({"text": fallback(), "source": "fallback"})
+        # Lighting detail
+        if safe_lit is not None:
+            if lit_gap is not None and lit_gap >= 5:
+                lines.append(
+                    f"The SafeWalk route has {round(safe_lit)}% lit road coverage — "
+                    f"{lit_gap} percentage points more than the fastest path."
+                )
+            else:
+                lines.append(f"{round(safe_lit)}% of the SafeWalk route runs along lit roads.")
 
-    try:
-        from huggingface_hub import InferenceClient
+        # Business detail
+        if safe_biz is not None:
+            if biz_gap > 0:
+                lines.append(
+                    f"It passes {safe_biz} active {'business' if safe_biz == 1 else 'businesses'} — "
+                    f"{biz_gap} more than the direct route — keeping natural surveillance high."
+                )
+            elif safe_biz > 0:
+                lines.append(f"{safe_biz} active {'business' if safe_biz == 1 else 'businesses'} line the route, providing natural surveillance.")
 
-        client = InferenceClient(api_key=hf_token)
-        messages = [
-            {
-                "role": "system",
-                "content": "You are SafeWalk, a calm walking safety companion. Give 3-5 short sentences. Mention lighting, businesses, and route choice. No panic language; practical and reassuring.",
-            },
-            {
-                "role": "user",
-                "content": f"Compare routes for walking safety (JSON): {body}",
-            },
-        ]
-        response = client.chat_completion(
-            model="mistralai/Mistral-7B-Instruct-v0.3",
-            messages=messages,
-            max_tokens=280,
-        )
-        text = response.choices[0].message.content.strip() if response.choices else ""
-        if not text:
-            text = fallback()
-        return jsonify({"text": text, "source": "huggingface"})
-    except Exception as e:
-        print(f"HF Error: {e}")
-        return jsonify({"text": fallback(), "source": "fallback"})
+        # Isolation note
+        if safe_iso is not None and safe_iso > 20:
+            lines.append(f"About {round(safe_iso)}% of the route has limited lighting and amenities — stay alert in those stretches.")
+
+        # Time cost
+        if extra_min is not None and extra_min > 0:
+            lines.append(f"It adds {extra_min} {'minute' if extra_min == 1 else 'minutes'} to your walk — a small trade-off for significantly better visibility.")
+        elif safe_dm is not None:
+            lines.append(f"Total walk time is about {fmt_min(safe_dm)} minutes.")
+
+        return " ".join(lines)
+
+    return jsonify({"text": smart_summary(), "source": "summary"})
 
 
 @app.get("/api/reports")
