@@ -280,16 +280,12 @@ async function readJsonResponse(response) {
   const text = await response.text();
   const trimmed = (text ?? "").trim();
   if (!trimmed) {
-    throw new Error(
-      `Empty response (${response.status}). Start the API: safewalk/backend → python app.py (port 5050).`
-    );
+    throw new Error(`Service temporarily unavailable (${response.status}). Please try again shortly.`);
   }
   try {
     return JSON.parse(trimmed);
   } catch {
-    throw new Error(
-      `Invalid response (${response.status}). Is the backend running on port 5050?`
-    );
+    throw new Error(`Unexpected response (${response.status}). Please try again shortly.`);
   }
 }
 
@@ -687,7 +683,7 @@ function LocationAutocomplete({
 }
 
 export default function App() {
-  const apiBase = "";
+  const apiBase = import.meta.env.VITE_API_URL || "";
   const [startQ, setStartQ] = useState("");
   const [endQ, setEndQ] = useState("");
   const [startResolved, setStartResolved] = useState(null);
