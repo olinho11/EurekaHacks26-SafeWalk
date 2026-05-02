@@ -41,9 +41,213 @@ import {
   Zap,
   Footprints,
   Send,
+  Settings as SettingsIcon,
+  Palette,
+  Info,
+  ShieldCheck,
+  FileText,
+  Heart,
+  X,
 } from "lucide-react";
 import logo from "./assets/logo.png";
 import Onboarding from "./Onboarding";
+
+const APP_VERSION = "1.0.0";
+
+const THEMES = [
+  { id: "teal",   name: "Teal",   meta: "Default",   color: "#3ee6b0" },
+  { id: "amber",  name: "Amber",  meta: "Lamplight", color: "#f0c350" },
+  { id: "blue",   name: "Blue",   meta: "Cool",      color: "#6ea5ff" },
+  { id: "purple", name: "Purple", meta: "Twilight",  color: "#b07cff" },
+  { id: "rose",   name: "Rose",   meta: "Warm",      color: "#ff82a5" },
+];
+
+const SETTINGS_TABS = [
+  { id: "appearance", label: "Appearance", icon: Palette },
+  { id: "about",      label: "About",      icon: Info },
+  { id: "privacy",    label: "Privacy",    icon: ShieldCheck },
+  { id: "terms",      label: "Terms",      icon: FileText },
+  { id: "credits",    label: "Credits",    icon: Heart },
+];
+
+function SettingsModal({ open, onClose, theme, onThemeChange }) {
+  const [activeTab, setActiveTab] = useState("appearance");
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  return (
+    <div className="modal-backdrop" onClick={onClose} role="dialog" aria-modal="true">
+      <div className="modal modal-settings" onClick={(e) => e.stopPropagation()}>
+        <header className="modal-header">
+          <div className="modal-title">
+            <h2>Settings</h2>
+            <p className="modal-subtitle">Customize SafeWalk and review policies</p>
+          </div>
+          <button className="modal-close" onClick={onClose} aria-label="Close settings">
+            <X size={18} strokeWidth={2.5} />
+          </button>
+        </header>
+
+        <div className="settings-layout">
+          <nav className="settings-nav" aria-label="Settings sections">
+            {SETTINGS_TABS.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  className={`settings-nav-btn${activeTab === tab.id ? " active" : ""}`}
+                  onClick={() => setActiveTab(tab.id)}
+                >
+                  <Icon size={16} strokeWidth={2.25} />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </nav>
+
+          <div className="settings-panel" key={activeTab}>
+            {activeTab === "appearance" && (
+              <section className="settings-pane">
+                <header className="settings-pane-header">
+                  <h3>Appearance</h3>
+                  <p>Accent color used across buttons, highlights, and active states. Safety tier colors stay fixed for clarity.</p>
+                </header>
+                <div className="theme-list">
+                  {THEMES.map((t) => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      className={`theme-row${theme === t.id ? " active" : ""}`}
+                      onClick={() => onThemeChange(t.id)}
+                    >
+                      <span
+                        className="theme-row-dot"
+                        style={{ background: t.color, color: t.color }}
+                      />
+                      <span className="theme-row-text">
+                        <span className="theme-row-name">{t.name}</span>
+                        <span className="theme-row-meta">{t.meta}</span>
+                      </span>
+                      {theme === t.id ? (
+                        <CheckCircle2 size={18} strokeWidth={2.25} className="theme-row-check" />
+                      ) : (
+                        <span className="theme-row-check-empty" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {activeTab === "about" && (
+              <section className="settings-pane">
+                <header className="settings-pane-header">
+                  <h3>About SafeWalk</h3>
+                  <p>The story behind the app and how it routes you home.</p>
+                </header>
+                <div className="about-block">
+                  <img src={logo} alt="SafeWalk" />
+                  <div className="about-block-text">
+                    <div className="about-block-row">
+                      <span className="about-block-name">SafeWalk</span>
+                      <span className="app-version">v{APP_VERSION}</span>
+                    </div>
+                    <span className="about-block-tag">Pedestrian Safety Navigation</span>
+                  </div>
+                </div>
+                <p>
+                  SafeWalk routes pedestrians by natural surveillance — lit streets, foot traffic, and open
+                  businesses — instead of just shortest time. Built on the principle that safety comes from{" "}
+                  <em>"eyes on the street"</em>, not from avoiding people.
+                </p>
+                <p>
+                  The app compares the fastest path against an alternative optimized for visibility, lighting, and
+                  activity. Crowdsourced reports adjust scores in real time so the community can flag dim corners
+                  and construction without waiting for OSM updates.
+                </p>
+              </section>
+            )}
+
+            {activeTab === "privacy" && (
+              <section className="settings-pane">
+                <header className="settings-pane-header">
+                  <h3>Privacy Policy</h3>
+                  <p>What we don't collect — and why we don't need to.</p>
+                </header>
+                <p>
+                  <strong>SafeWalk does not collect, store, or transmit personal information.</strong> Your location
+                  is used only on-device to draw your position on the map and snap to the route during walk mode.
+                  It is never sent to our servers or any third party.
+                </p>
+                <p>
+                  Address autocomplete queries are forwarded to OpenStreetMap's Nominatim service. Map tiles and
+                  routing come from OpenStreetMap. Voice guidance uses your browser's built-in speech synthesis —
+                  nothing is uploaded.
+                </p>
+                <p>
+                  Community safety reports include only the coordinates you tap, the issue type, and your optional
+                  note. No account, identifier, or device fingerprint is attached.
+                </p>
+              </section>
+            )}
+
+            {activeTab === "terms" && (
+              <section className="settings-pane">
+                <header className="settings-pane-header">
+                  <h3>Terms of Service</h3>
+                  <p>The fine print you should still read.</p>
+                </header>
+                <p>
+                  SafeWalk is provided "as is" for informational purposes. Safety scores are heuristic estimates
+                  derived from open map data, not guarantees. <strong>Always trust your own judgment</strong> when
+                  walking, especially after dark.
+                </p>
+                <p>
+                  By using SafeWalk you agree not to submit false reports, abuse the routing service, or rely on
+                  the app as a substitute for emergency services. In an emergency, contact local authorities
+                  directly.
+                </p>
+                <p>
+                  Submitted reports become part of the public dataset that informs scores for all users. Do not
+                  include personal information in report notes.
+                </p>
+              </section>
+            )}
+
+            {activeTab === "credits" && (
+              <section className="settings-pane">
+                <header className="settings-pane-header">
+                  <h3>Built With</h3>
+                  <p>Open data and open source, all the way down. Thanks to the volunteers who maintain the maps the world depends on.</p>
+                </header>
+                <div className="tech-list">
+                  {[
+                    "React", "Vite", "Leaflet", "Lucide Icons",
+                    "Flask", "OSRM", "Overpass API", "Nominatim",
+                    "OpenStreetMap", "Claude Haiku",
+                  ].map((t) => (
+                    <span key={t} className="tech-tag">{t}</span>
+                  ))}
+                </div>
+              </section>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // Fix default marker icons in bundlers (Vite)
 delete L.Icon.Default.prototype._getIconUrl;
@@ -746,6 +950,20 @@ export default function App() {
     loadReports();
   };
 
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    return !localStorage.getItem("safewalk_onboarded");
+  });
+  const [showSettings, setShowSettings] = useState(false);
+  const [theme, setTheme] = useState(() => localStorage.getItem("safewalk_theme") || "teal");
+
+  // Apply theme to document
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("safewalk_theme", theme);
+  }, [theme]);
+
+  const toggleSettings = () => setShowSettings((v) => !v);
+
   const onMapPick = (latlng) => {
     setPendingReport(latlng);
   };
@@ -758,6 +976,12 @@ export default function App() {
   return (
     <>
       {showOnboarding && <Onboarding onComplete={completeOnboarding} />}
+      <SettingsModal
+        open={showSettings}
+        onClose={() => setShowSettings(false)}
+        theme={theme}
+        onThemeChange={setTheme}
+      />
       <div className="app-shell">
       <aside className="side-panel">
           <div className="brand">
@@ -770,6 +994,14 @@ export default function App() {
                 height="56"
               />
               <h1 className="brand-wordmark">SafeWalk</h1>
+              <button
+                className="btn-settings-trigger"
+                onClick={toggleSettings}
+                aria-label="Settings"
+                title="Settings"
+              >
+                <SettingsIcon size={20} strokeWidth={2.25} />
+              </button>
             </div>
           </div>
 
