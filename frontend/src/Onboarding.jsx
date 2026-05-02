@@ -30,6 +30,7 @@ const Onboarding = ({ onComplete }) => {
       title: "Natural Surveillance",
       tagline: "Safety in Numbers",
       description: "Our navigation favors 'Natural Surveillance': routes with active streetlights, consistent foot traffic, and open businesses.",
+      icon: <Eye size={48} className="onboarding-icon-main" />,
       features: [
         { icon: <Lightbulb size={20} />, text: "Well-lit thoroughfares" },
         { icon: <Users size={20} />, text: "Higher pedestrian volume" },
@@ -46,6 +47,7 @@ const Onboarding = ({ onComplete }) => {
       title: "Community Protocols",
       tagline: "Our Safety Guide",
       description: "SafeWalk is a community effort. Follow these protocols for the best experience:",
+      icon: <Users size={48} className="onboarding-icon-main" />,
       protocols: [
         "Report broken streetlights to help fellow walkers.",
         "Share your route with a trusted contact via GPS escort.",
