@@ -940,6 +940,15 @@ export default function App() {
     }
   };
 
+  const walkZoom = useMemo(() => {
+    if (!walkMode || !walkDerived.snapshot) return 17;
+    const d = walkDerived.snapshot.remainingStepM;
+    if (d < 30)  return 19;
+    if (d < 80)  return 18;
+    if (d < 180) return 17;
+    return 16;
+  }, [walkMode, walkDerived.snapshot?.remainingStepM]);
+
   const linesForFit = useMemo(() => {
     const rows = [];
     if (standard?.geometry?.length)
@@ -1451,7 +1460,7 @@ export default function App() {
                 : null
             }
             enabled={Boolean(walkMode && followUser && userPos)}
-            zoom={17}
+            zoom={walkZoom}
           />
           <MapClickHandler enabled={reportMode} onPick={onMapPick} />
 
