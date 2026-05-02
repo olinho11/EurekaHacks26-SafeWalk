@@ -716,7 +716,6 @@ button:active:not(:disabled) {
   color: var(--text);
   animation: fadeSlideIn 0.35s ease both;
   position: relative;
-  overflow: hidden;
 }
 
 .narration::before {
@@ -741,6 +740,12 @@ button:active:not(:disabled) {
 }
 
 .narration-header svg { flex-shrink: 0; }
+
+.narration-text {
+  font-size: var(--text-sm);
+  color: var(--text);
+  line-height: 1.65;
+}
 
 /* ── Report Form ─────────────────────────────────────── */
 .report-section {
