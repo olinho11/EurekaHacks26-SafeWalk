@@ -708,6 +708,7 @@ export default function App() {
   const [reportKind, setReportKind] = useState("streetlight");
   const [reportMsg, setReportMsg] = useState("");
   const [reportSuccess, setReportSuccess] = useState("");
+  const [reportSubmitting, setReportSubmitting] = useState(false);
   const [routesFetched, setRoutesFetched] = useState(false);
   const [walkMode, setWalkMode] = useState(null);
   const [walkDistError, setWalkDistError] = useState("");
@@ -990,30 +991,31 @@ export default function App() {
   }, [loadReports]);
 
   const submitReport = async () => {
-    if (!pendingReport) return;
-    await fetch(`${apiBase}/api/reports`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        lat: pendingReport.lat,
-        lon: pendingReport.lng,
-        kind: reportKind,
-        message: reportMsg,
-      }),
-    });
-    setPendingReport(null);
-    setReportMsg("");
-    setReportMode(false);
-    loadReports();
-    // Show success message and confetti
-    setReportSuccess("Thank you for helping keep our community safe! Your report has been submitted.");
-    confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { y: 0.6 }
-    });
-    // Clear success message after 5 seconds
-    setTimeout(() => setReportSuccess(""), 5000);
+    if (!pendingReport || reportSubmitting) return;
+    setReportSubmitting(true);
+    try {
+      await fetch(`${apiBase}/api/reports`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lat: pendingReport.lat,
+          lon: pendingReport.lng,
+          kind: reportKind,
+          message: reportMsg,
+        }),
+      });
+      setPendingReport(null);
+      setReportMsg("");
+      setReportMode(false);
+      loadReports();
+      setReportSuccess("Report submitted");
+      confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 } });
+      setTimeout(() => setReportSuccess(""), 4000);
+    } catch {
+      setReportSuccess("");
+    } finally {
+      setReportSubmitting(false);
+    }
   };
 
 
@@ -1402,9 +1404,15 @@ export default function App() {
                 placeholder="Short note (optional)"
               />
               <div className="actions-row">
-                <button className="btn-primary" type="button" onClick={submitReport}>
-                  <Send size={14} strokeWidth={2.25} />
-                  Submit report
+                <button className="btn-primary" type="button" onClick={submitReport} disabled={reportSubmitting}>
+                  {reportSubmitting ? (
+                    "Submitting…"
+                  ) : (
+                    <>
+                      <Send size={14} strokeWidth={2.25} />
+                      Submit report
+                    </>
+                  )}
                 </button>
                 <button
                   className="btn-ghost"
