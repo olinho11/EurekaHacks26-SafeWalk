@@ -708,6 +708,7 @@ export default function App() {
   const [reportKind, setReportKind] = useState("streetlight");
   const [reportMsg, setReportMsg] = useState("");
   const [reportSuccess, setReportSuccess] = useState("");
+  const [reportSubmitting, setReportSubmitting] = useState(false);
   const [routesFetched, setRoutesFetched] = useState(false);
   const [walkMode, setWalkMode] = useState(null);
   const [walkDistError, setWalkDistError] = useState("");
@@ -763,7 +764,8 @@ export default function App() {
       enriched,
       proj.distanceAlongM,
       totalM,
-      activeWalkRoute?.duration_min || 0
+      activeWalkRoute?.duration_min || 0,
+      proj.crossTrackM
     );
     return {
       ...proj,
@@ -1406,9 +1408,15 @@ export default function App() {
                 placeholder="Short note (optional)"
               />
               <div className="actions-row">
-                <button className="btn-primary" type="button" onClick={submitReport}>
-                  <Send size={14} strokeWidth={2.25} />
-                  Submit report
+                <button className="btn-primary" type="button" onClick={submitReport} disabled={reportSubmitting}>
+                  {reportSubmitting ? (
+                    "Submitting…"
+                  ) : (
+                    <>
+                      <Send size={14} strokeWidth={2.25} />
+                      Submit report
+                    </>
+                  )}
                 </button>
                 <button
                   className="btn-ghost"

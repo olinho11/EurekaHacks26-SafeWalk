@@ -87,7 +87,8 @@ export function computeWalkSnapshot(
   enrichedSteps,
   distanceAlongM,
   totalM,
-  durationMin
+  durationMin,
+  crossTrackM = Infinity
 ) {
   const remainingM = Math.max(0, totalM - distanceAlongM);
   const progressPct = totalM > 0 ? (distanceAlongM / totalM) * 100 : 0;
@@ -117,7 +118,7 @@ export function computeWalkSnapshot(
 
   const step = enrichedSteps[stepIndex];
   const remainingStepM = Math.max(0, step.cumEndM - distanceAlongM);
-  const atDestination = remainingM < 12;
+  const atDestination = remainingM < 25 && crossTrackM < 80;
 
   return {
     progressPct,
