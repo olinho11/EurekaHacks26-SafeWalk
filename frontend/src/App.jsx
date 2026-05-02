@@ -53,6 +53,7 @@ import {
   Ruler,
   Loader2,
 } from "lucide-react";
+import logo from "./assets/logo.png";
 
 const APP_VERSION = "1.0.0";
 
@@ -938,7 +939,7 @@ export default function App() {
         <div className="brand">
           <div className="brand-header">
             <img
-              src="/logo.png"
+              src={logo}
               alt="SafeWalk"
               className="brand-logo-img"
               width="56"
